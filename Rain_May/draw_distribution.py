@@ -146,9 +146,10 @@ class Draw(object):
         # levels = np.arange(0, 481, 30)  # 设置colorbar分层
         # levels = np.arange(0, 481, 40)  # 设置colorbar分层
         # levels = np.arange(0, 31, 2.5)  # 设置colorbar分层
-        levels = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
-        # levels = np.arange(0, 2000, 10)
-        bounds = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
+        # levels = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
+        # bounds = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
+        levels = [1, 5, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000,]
+        bounds = [1, 5, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000,]
         # norm = mpl.colors.BoundaryNorm(bounds, cmap,extend='both')
         norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
 
@@ -262,7 +263,8 @@ class Draw(object):
         # mpath.Path.unit_re
         # axes[5].add_patch()
         # self.draw_patch(axes[5])
-        bounds = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
+        # bounds = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
+        bounds = [1, 5, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000,]
 
         # norms = mpl
 
@@ -282,7 +284,8 @@ class Draw(object):
 
 if __name__ == '__main__':
 
-    time_flag = 'day'
+    # time_flag = 'day'
+    time_flag = 'all'
     area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
 
     # %%
@@ -294,7 +297,10 @@ if __name__ == '__main__':
     # %%
     tr = TransferData(ds=rain, area=area, time_flag=time_flag)
     rain = tr.rain_time_total()
-    print(rain['obs'])
+    # rain = tr.rain_hourly()
+    # rain = rain.isel(time=0)
+    rain = rain-rain['obs']
+    # print(rain['obs'])
     # %%
     #### 画图
     fig_name = 'rain_'+time_flag
