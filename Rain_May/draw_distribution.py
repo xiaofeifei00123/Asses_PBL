@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 '''
 Description:
-画月平均降水分布图
+画降水空间分布图
 -----------------------------------------
 Time             :2021/06/15 17:21:14
 Author           :Forxd
@@ -29,7 +29,7 @@ import cartopy.feature as cfeat
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from cartopy.io.shapereader import Reader, natural_earth
 import matplotlib as mpl
-from matplotlib.path  import Path
+from matplotlib.path import Path
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -38,23 +38,28 @@ import geopandas
 import cmaps
 import meteva.base as mb
 
-from read_data import Return_data as rd
-# from read_data import  get_rain_total, get_rain_specific_day
+from read_data import TransferData
+from read_data import GetData
 from get_cmap import get_cmap_rain
 
+
 class Draw(object):
-    def __init__(self,fig_name, flag) -> None:
+
+    def __init__(self, fig_name, flag) -> None:
         self.fig_name = fig_name
         self.flag = flag
+        self.path_province = '/mnt/zfm_18T/fengxiang/DATA/SHP/Map/cn_shp/Province_9/Province_9.shp'
+        self.path_tibet = '/mnt/zfm_18T/fengxiang/DATA/SHP/shp_tp/Tibet.shp'
+        self.picture_path = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain_May/picture'
 
-    def draw_station(self,ax):
+    def draw_station(self, ax):
         station = {
-            'NQ': { 'lat': 31.4, 'lon': 92.0 },
-            'LS': { 'lat': 29.6, 'lon': 91.1 },
-            'TTH': { 'lat': 34.2, 'lon': 92.4 },
-            'GZ': { 'lat': 32.3, 'lon': 84.0 },
-            'SZ': { 'lat': 30.9, 'lon': 88.7 },
-            'SQH': { 'lat': 32.4, 'lon': 80.1 },
+            'NQ': {'lat': 31.4, 'lon': 92.0},
+            'LS': {'lat': 29.6, 'lon': 91.1},
+            'TTH': {'lat': 34.2, 'lon': 92.4},
+            'GZ': {'lat': 32.3, 'lon': 84.0},
+            'SZ': {'lat': 30.9, 'lon': 88.7},
+            'SQH': {'lat': 32.4, 'lon': 80.1},
         }
         values = station.values()
         station_name = list(station.keys())
@@ -66,15 +71,15 @@ class Draw(object):
             y.append(float(i['lat']))
             x.append(float(i['lon']))
 
-        ## 标记出站点
+        # 标记出站点
         ax.scatter(x,
-                y,
-                color='black',
-                transform=ccrs.PlateCarree(),
-                alpha=1.,
-                linewidth=0.2,
-                s=10)
-        ## 给站点加注释
+                   y,
+                   color='black',
+                   transform=ccrs.PlateCarree(),
+                   alpha=1.,
+                   linewidth=0.2,
+                   s=10)
+        # 给站点加注释
         for i in range(len(x)):
             # print(x[i])
             ax.text(x[i] - 1,
@@ -84,9 +89,9 @@ class Draw(object):
                     alpha=1.,
                     fontdict={
                         'size': 9,
-                    })
+            })
 
-    def create_map(self,ax):
+    def create_map(self, ax):
         """创建地图对象
         ax 需要添加底图的画图对象
 
@@ -96,16 +101,21 @@ class Draw(object):
         proj = ccrs.PlateCarree()
         # --设置地图属性
         # 画省界
-        provinces = cfeat.ShapelyFeature(Reader(
-            '/mnt/Disk4T_5/fengxiang_file/Data/Map/cn_shp/Province_9/Province_9.shp'
-        ).geometries(),
-                                        proj,
-                                        edgecolor='k',
-                                        facecolor='none')
+        # provinces = cfeat.ShapelyFeature(Reader(
+        #     '/mnt/Disk4T_5/fengxiang_file/Data/Map/cn_shp/Province_9/Province_9.shp'
+        # ).geometries(),
+        #                                 proj,
+        #                                 edgecolor='k',
+        #                                 facecolor='none')
+        provinces = cfeat.ShapelyFeature(
+            Reader(self.path_province).geometries(),
+            proj,
+            edgecolor='k',
+            facecolor='none')
 
         # 画青藏高原
         Tibet = cfeat.ShapelyFeature(
-            Reader('/home/fengxiang/Data/shp_tp/Tibet.shp').geometries(),
+            Reader(self.path_tibet).geometries(),
             proj,
             edgecolor='k',
             facecolor='none')
@@ -127,8 +137,7 @@ class Draw(object):
         # ax.set_extent([78, 98, 26, 38], crs=ccrs.PlateCarree())
         return ax
 
-
-    def draw_contourf(self,data, ax, cmap, title):
+    def draw_contourf(self, data, ax, cmap, title):
         # levels = np.arange(0, 66, 5)  # 设置colorbar分层
         # levels = [200, 205, 210, 215, 220, 225, 235, 245, 250]  # 需要画出的等值线
         # levels = np.arange(0, 66, 5)  # 设置colorbar分层
@@ -141,7 +150,7 @@ class Draw(object):
         # levels = np.arange(0, 2000, 10)
         bounds = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
         # norm = mpl.colors.BoundaryNorm(bounds, cmap,extend='both')
-        norm = mpl.colors.BoundaryNorm(bounds,cmap.N, extend='both')
+        norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
 
         ax = self.create_map(ax)  # 创建坐标图像
         # print(title[0])
@@ -154,14 +163,14 @@ class Draw(object):
         x = data.lon
         y = data.lat
         crx = ax.contourf(x,
-                        y,
-                        data,
-                        cmap=cmap,
-                        norm=norm,
-                        extend='both',
-                        # extend='max',
-                        levels=levels,
-                        transform=ccrs.PlateCarree())
+                          y,
+                          data,
+                          cmap=cmap,
+                          norm=norm,
+                          extend='both',
+                          # extend='max',
+                          levels=levels,
+                          transform=ccrs.PlateCarree())
         # ax.set_title(title[2], loc='left',  fontsize=12)
         ax.set_title(title[0], loc='left',  fontsize=12)
         ax.set_extent([70, 105, 25, 41], crs=ccrs.PlateCarree())
@@ -175,18 +184,26 @@ class Draw(object):
         return crx
 
     def draw_patch(self, ax):
+        """画矩形框
+        """
 
         area = [None] * 3  # 设置一个维度为8的空列表
-        area[0] = {"lat1":33.5, "lat2":40, "lon1":80, "lon2":90}  # north
-        area[1] = {"lat1":28, "lat2":33, "lon1":83, "lon2":94}  # south left 
-        area[2] = {"lat1":26, "lat2":33, "lon1":95, "lon2":103}  # south right
+        area[0] = {"lat1": 33.5, "lat2": 40, "lon1": 80, "lon2": 90}  # north
+        area[1] = {"lat1": 28, "lat2": 33,
+                   "lon1": 83, "lon2": 94}  # south left
+        area[2] = {"lat1": 26, "lat2": 33,
+                   "lon1": 95, "lon2": 103}  # south right
         for i in range(3):
             lon = np.empty(4)
             lat = np.empty(4)
-            lon[0], lat[0] = area[i]['lon1'],area[i]['lat1']   # lower left (ll)
-            lon[1], lat[1] = area[i]['lon2'],area[i]['lat1']   # lower right (ll)
-            lon[2], lat[2] = area[i]['lon2'],area[i]['lat2']   # upper right(ll)
-            lon[3], lat[3] = area[i]['lon1'],area[i]['lat2']   # upper left (ll)
+            # lower left (ll)
+            lon[0], lat[0] = area[i]['lon1'], area[i]['lat1']
+            # lower right (ll)
+            lon[1], lat[1] = area[i]['lon2'], area[i]['lat1']
+            # upper right(ll)
+            lon[2], lat[2] = area[i]['lon2'], area[i]['lat2']
+            # upper left (ll)
+            lon[3], lat[3] = area[i]['lon1'], area[i]['lat2']
             x, y = lon, lat
             xy = list(zip(x, y))
             # print(xy)
@@ -194,15 +211,12 @@ class Draw(object):
             ax.add_patch(poly)
             # plt.gca().add_patch(poly)
 
-    def draw_obs(self,rain):
+    def draw_main(self, rain):
 
-        ## 获取地形文件
-        shp_file = '/home/fengxiang/Data/shp_tp/Tibet.shp'
-        shp = geopandas.read_file(shp_file)
-        # module_list = ['YSU', 'QNSE', 'QNSE_EDMF', 'TEMF']
-        model_list = ['QNSE', 'QNSE_EDMF', 'TEMF','ACM2','YSU']
+        shp = geopandas.read_file(self.path_tibet)
+        model_list = ['QNSE', 'QNSE_EDMF', 'TEMF', 'ACM2', 'YSU']
 
-        ## --->画图
+        # --->画图
         proj = ccrs.PlateCarree()  # 创建坐标系
         fig = plt.figure(figsize=(9, 9), dpi=400)  # 创建页面
         grid = plt.GridSpec(3,
@@ -227,32 +241,24 @@ class Draw(object):
 
         time_2005 = '2800_2906 Jul 2005'
         time_2014 = '1900_2000 Aug 2014'
-        # rain = self.get_total_rain()
 
 
-        # print(rain['obs'])
-        # --------------------------------------------------
-        # #### test
-        # ds = xr.open_dataset('/mnt/Disk4T_5/fengxiang_file/Data/ERA5/temp/gpcp_v02r03_monthly_d201607.nc')
-        # da = ds.precip
-        # da = da.rename({'longitude':'lon', 'latitude':'lat'})
-        # da = da.squeeze()
-        # print(da)
-        # print(rain['obs'])
-        # rain['obs'] = da*30
-        # --------------------------------------------------
-
-        # rain_QNSE = ds_QNSE.totrain.salem.roi(shape=shp)
-        self.draw_contourf(rain['ACM2'].salem.roi(shape=shp), axes[0], cmap, ['ACM2', '(a)',time_2005])
-        self.draw_contourf(rain['ACM2'].salem.roi(shape=shp), axes[1], cmap, ['YSU', '(b)',time_2005])
-        self.draw_contourf(rain['QNSE'].salem.roi(shape=shp), axes[2], cmap, ['QNSE', '(c)',time_2005])
-        self.draw_contourf(rain['QNSE_EDMF'].salem.roi(shape=shp), axes[3], cmap, ['QNSE_EDMF', '(d)',time_2005])
-        self.draw_contourf(rain['TEMF'].salem.roi(shape=shp), axes[4], cmap, ['TEMF', '(e)',time_2005])
-        cf = self.draw_contourf(rain['obs'].salem.roi(shape=shp), axes[5], cmap, ['obs', '(f)',time_2005])
+        self.draw_contourf(rain['ACM2'].salem.roi(
+            shape=shp), axes[0], cmap, ['ACM2', '(a)', time_2005])
+        self.draw_contourf(rain['ACM2'].salem.roi(
+            shape=shp), axes[1], cmap, ['YSU', '(b)', time_2005])
+        self.draw_contourf(rain['QNSE'].salem.roi(
+            shape=shp), axes[2], cmap, ['QNSE', '(c)', time_2005])
+        self.draw_contourf(rain['QNSE_EDMF'].salem.roi(
+            shape=shp), axes[3], cmap, ['QNSE_EDMF', '(d)', time_2005])
+        self.draw_contourf(rain['TEMF'].salem.roi(
+            shape=shp), axes[4], cmap, ['TEMF', '(e)', time_2005])
+        cf = self.draw_contourf(rain['obs'].salem.roi(
+            shape=shp), axes[5], cmap, ['obs', '(f)', time_2005])
         # cf = self.draw_contourf(rain['obs'], axes[5], cmap, ['obs', '(f)',time_2005])
         ax6 = fig.add_axes([0.18, 0.06, 0.7, 0.02])  # 重新生成一个新的坐标图
 
-        ### 在obs上画边框
+        # 在obs上画边框
         # mpath.Path.unit_re
         # axes[5].add_patch()
         # self.draw_patch(axes[5])
@@ -267,51 +273,32 @@ class Draw(object):
             orientation='horizontal',
             ticks=bounds,
             # fraction = 0.1,  # 色标大小
-            pad=0.1,  # 
-            # extend='both'
+            pad=0.1,  #
         )
-        # cb = fig.colorbar(
-        #     cf,
-        #     cax=ax6,
-        #     orientation='horizontal',
-        #     ticks=bounds,
-        #     # fraction = 0.1,  # 色标大小
-        #     pad=0.1,  # 
-        #     # extend='both'
-        # )
-        # fig.savefig('comapre')
-        path = '/home/fengxiang/Project/Asses_PBL/Draw/Rain_May/'
-        fig.savefig(path+self.fig_name)
-        
+        # path = '/home/fengxiang/Project/Asses_PBL/Draw/Rain_May/'
+        path = os.path.join(self.picture_path, self.fig_name)
+        fig.savefig(path)
+
 
 if __name__ == '__main__':
-    pass
 
+    time_flag = 'day'
+    area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
 
+    # %%
 
-    # #### test
-    # ds = xr.open_dataset('/mnt/Disk4T_5/fengxiang_file/Data/ERA5/temp/gpcp_v02r03_monthly_d201607.nc')
-    # da = ds.precip
-    # da = da.rename({'longitude':'lon', 'latitude':'lat'})
-    # da = da.squeeze()
-    # print(da)
+    # %%
+    gd = GetData()
+    rain = gd.get_rain_hourly()
 
-
-
-
-    # flag = 'night'
-    flag = 'day'
-    # flag = 'all'
-    area = {"lat1":24.875, "lat2":40.125, "lon1":69.875, "lon2":105.125}
-    # rain = get_rain_total(flag, area)  # 这个和area, flag也应该没有关系
-    rd = rd(flag, area)
-    # rain = rd.get_rain_specific_day('2016/07/14 00')
-    rain = rd.get_rain_total()
-    
+    # %%
+    tr = TransferData(ds=rain, area=area, time_flag=time_flag)
+    rain = tr.rain_time_total()
     print(rain['obs'])
+    # %%
+    #### 画图
+    fig_name = 'rain_'+time_flag
+    dr = Draw(fig_name, time_flag)
+    dr.draw_main(rain)
 
-
-    # # #### 画图
-    fig_name = 'rain_'+flag
-    dr = Draw(fig_name, flag)
-    dr.draw_obs(rain)
+# %%
