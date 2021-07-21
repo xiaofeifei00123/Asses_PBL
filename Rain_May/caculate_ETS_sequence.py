@@ -11,9 +11,7 @@ Time             :2021/06/04 14:32:20
 Author           :Forxd
 Version          :1.0
 '''
-
 import xarray as xr
-
 import meteva.method as mem
 import meteva.base as meb
 import numpy as np
@@ -27,22 +25,25 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import savefig
 # get_data = Get_data('night')
 
-from read_data import Return_data  as rd
+# from read_data import Return_data  as rd
+from read_data import GetData, TransferData
 # from read_data  import get_rain_total, get_rain_times, get_rain_daily
 
 
 class Caculate():
 
-    def __init__(self, flag, area) -> None:
-        self.flag = flag
-        self.area = area
+    def __init__(self, rain) -> None:
+        # self.flag = flag
+        # self.area = area
+        self.rain = rain
 
     def get_two_scale(self,):
         # flag = 'all'
         """计算ETS评分这些值
         """
         # rd = rd(self.flag, self.area)
-        rain = rd.get_rain_total()
+        # rain = rd.get_rain_total()
+        rain = self.rain
         model_list = ['MYJ', 'YSU', 'QNSE', 'QNSE_EDMF', 'TEMF']
 
         ### 计算二分类评分
@@ -63,7 +64,7 @@ class Caculate():
             print(rain_model.max())
 
             # hfmc = mem.hfmc(rain['obs'].values/30, rain[model].values/30, grade_list=[0.1])
-            hfmc = mem.hfmc(rain_obs/30, rain_model/30, grade_list=[0.1])
+            hfmc = mem.hfmc(rain_obs/30, rain_model/30, grade_list=[0.1])   # 这里算的都是平均值的评分, 我想要的是评分的平均值, 也就是要算每个时次的评分
             # ets = mem.ets_hfmc(hfmc)
             # ETS[model] = ets
             ETS[model] = mem.ets_hfmc(hfmc) 
@@ -377,16 +378,27 @@ if __name__ == '__main__':
     # flag = 'night'
     # area = area4
 
-    flag_list = ['all', 'night', 'day']
-    area_dic = {'all':area0, 'north':area1, 'south_west':area2, 'south_east':area3}
+    
+    
+    area_dic = {}
+    area_dic['all'] = area0
+    area_dic['north'] = area1
+    area_dic['south left'] = area2
+    area_dic['south right'] = area3
+    month = 'May'    
+    gd = GetData(month)
+    rain = gd.get_rain_hourly()
+    print(rain)
+    area = area_dic['all']
 
+    tr = TransferData(rain, area, flag)
+    rain1 = tr.rain_hourly()
+    print(rain1)
+    
 
-    rd = rd(flag, area0)  # 必须要在主函数里面实例化, 后面就可以直接调用了
-    # rain = rd.get_rain_total()
-    # print(rain)
     #### 计算评分
-    ca = Caculate(flag, area0)
-    ca.get_two_scale()    
+    # ca = Caculate(rain)
+    # ca.get_two_scale()    
     # ca.get_time_scale()    
     # ca.get_space_scale()    
 
