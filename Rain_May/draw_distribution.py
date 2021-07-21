@@ -11,17 +11,15 @@ Version          :1.0
 
 from pandas.core import frame
 from shapely.ops import transform
-import xarray as xr
-import pandas as pd
-import cmaps
+# import xarray as xr
+# import pandas as pd
 import numpy as np
-import xesmf as xe
+# import xesmf as xe
 import os
-import wrf
-import netCDF4 as nc
+# import netCDF4 as nc
 
-from datetime import datetime
-import datetime as Datetime
+# from datetime import datetime
+# import datetime as Datetime
 
 import salem
 import cartopy.crs as ccrs
@@ -30,13 +28,13 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from cartopy.io.shapereader import Reader, natural_earth
 import matplotlib as mpl
 from matplotlib.path import Path
-import matplotlib.patches as patches
+# import matplotlib.patches as patches
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-import matplotlib.gridspec as gridspec
+# import matplotlib.ticker as mticker
+# import matplotlib.gridspec as gridspec
 import geopandas
-import cmaps
-import meteva.base as mb
+# import cmaps
+# import meteva.base as mb
 
 from read_data import TransferData
 from read_data import GetData
@@ -52,6 +50,11 @@ class Draw(object):
         self.path_tibet = '/mnt/zfm_18T/fengxiang/DATA/SHP/shp_tp/Tibet.shp'
         self.picture_path = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain_May/picture'
 
+        self.levels = [1, 5, 10, 25, 50, 100, 200,
+                       250, 300, 400, 600, 800, 1000,]
+        # self.levels = [0.1, 0.5, 1, 2.5, 5.0, 10.0, 20.0,
+        #                25.0, 30.0, 40.0, 60.0, 80.0, 100.0,]
+
     def draw_station(self, ax):
         station = {
             'NQ': {'lat': 31.4, 'lon': 92.0},
@@ -63,8 +66,6 @@ class Draw(object):
         }
         values = station.values()
         station_name = list(station.keys())
-        # print(type(station_name[0]))
-        # print(station_name[0])
         x = []
         y = []
         for i in values:
@@ -101,12 +102,6 @@ class Draw(object):
         proj = ccrs.PlateCarree()
         # --设置地图属性
         # 画省界
-        # provinces = cfeat.ShapelyFeature(Reader(
-        #     '/mnt/Disk4T_5/fengxiang_file/Data/Map/cn_shp/Province_9/Province_9.shp'
-        # ).geometries(),
-        #                                 proj,
-        #                                 edgecolor='k',
-        #                                 facecolor='none')
         provinces = cfeat.ShapelyFeature(
             Reader(self.path_province).geometries(),
             proj,
@@ -120,12 +115,10 @@ class Draw(object):
             edgecolor='k',
             facecolor='none')
 
-        # ax.add_feature(provinces, linewidth=0.6, zorder=2)
+        ax.add_feature(provinces, linewidth=0.6, zorder=2)
         ax.add_feature(Tibet, linewidth=0.6, zorder=2)  # 添加青藏高原区域
 
         # --设置图像刻度
-        # ax.set_xticks(np.arange(80, 102 + 2, 4))
-        # ax.set_yticks(np.arange(26, 38 + 2, 2))
         ax.set_xticks(np.arange(70, 105 + 2, 4))
         ax.set_yticks(np.arange(25, 45 + 2, 2))
         ax.xaxis.set_major_formatter(LongitudeFormatter())
@@ -138,24 +131,10 @@ class Draw(object):
         return ax
 
     def draw_contourf(self, data, ax, cmap, title):
-        # levels = np.arange(0, 66, 5)  # 设置colorbar分层
-        # levels = [200, 205, 210, 215, 220, 225, 235, 245, 250]  # 需要画出的等值线
-        # levels = np.arange(0, 66, 5)  # 设置colorbar分层
-        # levels = np.arange(0, 110, 5)  # 设置colorbar分层
-        # levels = np.arange(60, 500, 5)  # 设置colorbar分层
-        # levels = np.arange(0, 481, 30)  # 设置colorbar分层
-        # levels = np.arange(0, 481, 40)  # 设置colorbar分层
-        # levels = np.arange(0, 31, 2.5)  # 设置colorbar分层
-        # levels = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
-        # bounds = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
-        levels = [1, 5, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000,]
-        bounds = [1, 5, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000,]
-        # norm = mpl.colors.BoundaryNorm(bounds, cmap,extend='both')
-        norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='both')
 
+        norm = mpl.colors.BoundaryNorm(self.levels, cmap.N, extend='both')
         ax = self.create_map(ax)  # 创建坐标图像
-        # print(title[0])
-        # if title[0] == 'obs' and self.flag == 'all':
+
         if title[0] == 'obs':
             pass
             self.draw_patch(ax)
@@ -170,7 +149,8 @@ class Draw(object):
                           norm=norm,
                           extend='both',
                           # extend='max',
-                          levels=levels,
+                          #   levels=levels,
+                          levels=self.levels,
                           transform=ccrs.PlateCarree())
         # ax.set_title(title[2], loc='left',  fontsize=12)
         ax.set_title(title[0], loc='left',  fontsize=12)
@@ -197,20 +177,14 @@ class Draw(object):
         for i in range(3):
             lon = np.empty(4)
             lat = np.empty(4)
-            # lower left (ll)
             lon[0], lat[0] = area[i]['lon1'], area[i]['lat1']
-            # lower right (ll)
             lon[1], lat[1] = area[i]['lon2'], area[i]['lat1']
-            # upper right(ll)
             lon[2], lat[2] = area[i]['lon2'], area[i]['lat2']
-            # upper left (ll)
             lon[3], lat[3] = area[i]['lon1'], area[i]['lat2']
             x, y = lon, lat
             xy = list(zip(x, y))
-            # print(xy)
             poly = plt.Polygon(xy, edgecolor="red", fc="none", lw=.9, alpha=1)
             ax.add_patch(poly)
-            # plt.gca().add_patch(poly)
 
     def draw_main(self, rain):
 
@@ -243,7 +217,6 @@ class Draw(object):
         time_2005 = '2800_2906 Jul 2005'
         time_2014 = '1900_2000 Aug 2014'
 
-
         self.draw_contourf(rain['ACM2'].salem.roi(
             shape=shp), axes[0], cmap, ['ACM2', '(a)', time_2005])
         self.draw_contourf(rain['ACM2'].salem.roi(
@@ -256,30 +229,35 @@ class Draw(object):
             shape=shp), axes[4], cmap, ['TEMF', '(e)', time_2005])
         cf = self.draw_contourf(rain['obs'].salem.roi(
             shape=shp), axes[5], cmap, ['obs', '(f)', time_2005])
-        # cf = self.draw_contourf(rain['obs'], axes[5], cmap, ['obs', '(f)',time_2005])
         ax6 = fig.add_axes([0.18, 0.06, 0.7, 0.02])  # 重新生成一个新的坐标图
 
-        # 在obs上画边框
-        # mpath.Path.unit_re
-        # axes[5].add_patch()
-        # self.draw_patch(axes[5])
-        # bounds = [1, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000, 2000]
-        bounds = [1, 5, 10, 25, 50, 100, 200, 250, 300, 400, 600, 800, 1000,]
-
-        # norms = mpl
-
-        # norm = mpl.colors.BoundaryNorm(bounds, cmap,extend='both')
         cb = fig.colorbar(
             cf,
             cax=ax6,
             orientation='horizontal',
-            ticks=bounds,
+            ticks=self.levels,
             # fraction = 0.1,  # 色标大小
             pad=0.1,  #
         )
-        # path = '/home/fengxiang/Project/Asses_PBL/Draw/Rain_May/'
         path = os.path.join(self.picture_path, self.fig_name)
         fig.savefig(path)
+def draw_hourly():
+    """每个小时的降水画一张图
+    """
+    time_flag = 'all'
+    area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
+    gd = GetData()
+    rain = gd.get_rain_hourly()
+    tr = TransferData(ds=rain, area=area, time_flag=time_flag)
+    rain = tr.rain_hourly()
+    fl_time = rain.time
+
+    for i in fl_time:
+        rain_hour = rain.sel(time=i)
+        flnm_time = str(i.dt.strftime('%Y%m_%d%H').values)
+        fig_name = 'rain_'+flnm_time
+        dr = Draw(fig_name, time_flag)
+        dr.draw_main(rain_hour)
 
 
 if __name__ == '__main__':
@@ -297,14 +275,20 @@ if __name__ == '__main__':
     # %%
     tr = TransferData(ds=rain, area=area, time_flag=time_flag)
     rain = tr.rain_time_total()
-    # rain = tr.rain_hourly()
-    # rain = rain.isel(time=0)
     rain = rain-rain['obs']
-    # print(rain['obs'])
-    # %%
-    #### 画图
     fig_name = 'rain_'+time_flag
     dr = Draw(fig_name, time_flag)
     dr.draw_main(rain)
+    # rain = tr.rain_hourly()
+    # rain = rain-rain['obs']
+    # print(rain['obs'])
+    # %%
+    # fl_time = rain.time
 
-# %%
+    # for i in fl_time:
+    #     rain_hour = rain.sel(time=i)
+    #     flnm_time = str(i.dt.strftime('%Y%m_%d%H').values)
+    #     fig_name = 'rain_'+flnm_time
+
+    #     dr = Draw(fig_name, time_flag)
+    #     dr.draw_main(rain_hour)

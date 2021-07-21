@@ -13,7 +13,7 @@ import xarray as xr
 import pandas as pd
 # import salem  # 过滤高原外的数据, 滤出地形外的数据
 # import geopandas
-import xesmf  # 插值
+import xesmf as xe  # 插值
 import numpy as np
 import os
 ## 读grd文件的库
@@ -54,9 +54,32 @@ class GetData():
         flnm = '/mnt/zfm_18T/fengxiang/DATA/PRECIPTATION/CMORPH_STATION_RAIN/05/CHN_PRCP_HOUR_MERG_DISPLAY_0.1deg.lnx.ctl'
         ds = open_CtlDataset(flnm)
         da = ds.crain.squeeze(drop=True)
-        # da = da.where(da.values>=0, np.nan)
-        da = da.where(da.values>=0, 0.0)
+        da = da.where(da.values>=0, np.nan)
+
+        ds_in = da.to_dataset()
+        ds_in = ds_in.drop_dims('time')
+
+        ## 插值器构建，前面必须是一个二维的dataset格式的数组
+        # ds_out = xe.util.grid_2d(69.75, 105.125, 0.25, 24.75, 45.125, 0.25)
+        # ds_out = xe.util.grid_2d(69.75, 105.125, 0.25, 24.75, 45.125, 0.25)
+        ds_out = xr.Dataset(
+            {'lat':(['lat'],np.arange(24.875, 45.125+0.25, 0.25)),
+             'lon':(['lon'], np.arange(69.875, 105.125+0.25, 0.25))}
+            )
+        regridder = xe.Regridder(ds_in, ds_out, 'bilinear')  
+
+        ### regrid, 插值
+        da = regridder(da)  
+        
+        # da = regridder(da)  
+        # xtime = da.time.values
+        # lat = np.arange(24.875, 45.125+0.25,0.25)
+        # lon = np.arange(69.875, 105.125+0.25,0.25)
+
+        # da_return = xr.DataArray(da.values, coords=[xtime, lat, lon], dims=['time', 'lat', 'lon'])
         # print(da)
+        # print(da_return)
+        # return da_return
         return da
 
     def get_rain_hourly(self):
@@ -148,8 +171,8 @@ if __name__ == '__main__':
     pass
     # %%
     ### 获取数据
-    # time_flag = 'all' ## 白天还是夜间
-    time_flag = 'night' ## 白天还是夜间
+    time_flag = 'all' ## 白天还是夜间
+    # time_flag = 'night' ## 白天还是夜间
     area = {"lat1":24.875, "lat2":45.125, "lon1":70.875, "lon2":105.125}
     gd = GetData()
     rain = gd.get_rain_hourly()
@@ -165,3 +188,5 @@ if __name__ == '__main__':
     print(b)
     # c = tr.rain_space_average()
     
+
+# %%
