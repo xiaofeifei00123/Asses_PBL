@@ -473,6 +473,42 @@ if __name__ == '__main__':
             'number': '55228',
             'height': 4280
         },
+        'TingRi': {
+            'lat': 28.63,
+            'lon': 87.08,
+            'name': 'TingRi',
+            'number': '55664',
+            'height': 4302
+        },
+        'LaSa': {
+            'lat': 29.66,
+            'lon': 91.14,
+            'name': 'LaSa',
+            'number': '55591',
+            'height': 3648.8999
+        },
+        'NaQu': {
+            'lat': 31.48,
+            'lon': 92.06,
+            'name': 'NaQu',
+            'number': '55299',
+            'height': 4508
+        },
+        'LinZhi': {
+            'lat': 29.65,
+            'lon': 94.36,
+            'name': 'LinZhi',
+            'number': '56312',
+            'height':2991.8 
+        },
+        'ChangDu': {
+            'lat': 31.15,
+            'lon': 97.17,
+            'name': 'ChangDu',
+            'number': '56137',
+            'height': 3315
+        },
+
     }
 
     station = station_dic['ShenZha']
