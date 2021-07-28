@@ -60,7 +60,8 @@ class GetData():
         self.station = station
         # self.pressure_level = np.arange(610, 100, -5)
         self.pressure_level = np.arange(570, 280, -5)
-        self.path = '/mnt/zfm_18T/Asses_PBL/'
+        self.path = '/mnt/zfm_18T/fengxiang/Asses_PBL/'
+        self.path_wrfout = '/mnt/zfm_18T/fengxiang/Asses_PBL/data/wrfout_data/'
         self.model_list = ['ACM2', 'YSU', 'QNSE', 'QNSE_EDMF', 'TEMF']
         
         self.month = month
@@ -69,14 +70,14 @@ class GetData():
         if self.month == 'Jul':
             self.month_num = '07'
             self.time_first = '2016-07-01 13:00'
-            self.flnm_height_obs = '/mnt/zfm_18T/Asses_PBL/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201607/upar_G_55228_2016070206.txt'
-            self.rh_file = '/mnt/zfm_18T/Asses_PBL/FNL/fnl_rh_201607'
+            self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201607/upar_G_55228_2016070206.txt'
+            self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201607'
         elif self.month == 'May':
             # self.month = 'May'
             self.month_num = '05'
             self.time_first = '2016-05-01 13:00'
-            self.flnm_height_obs = '/mnt/zfm_18T/Asses_PBL/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201605/upar_G_55228_2016051112.txt'
-            self.rh_file = '/mnt/zfm_18T/Asses_PBL/FNL/fnl_rh_201605'
+            self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201605/upar_G_55228_2016051112.txt'
+            self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201605'
         else:
             print("%s这个月份不在数据集内"%self.month)
             
@@ -142,7 +143,8 @@ class GetData():
             ## 删除有缺测的行, 露点温度缺测较多
             # td = td.dropna(dim='pressure')
             td = td.dropna(dim='pressure', how='any')
-            # td = td.interpolate_na(dim='time', method='linear',fill_value='extrapolate')
+            # td = td.dropna(dim='pressure', how='all')
+            # td = td.interpolate_na(dim='time', method='linear',fill_value='extrapolate')a
             # td = td.interpolate_na(dim='time')
             prc = td.pressure.values
             # height = td.height_coord.values
@@ -294,7 +296,9 @@ class GetWrfout(GetData):
             # 得到各层的pressure值
             # 不同时刻各层气压值，差别可以忽略不计,
             # 后面还要对气压层进行插值, 这里不对它做过高精度要求
-            path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
+            # path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
+            # path = os.path.join(self.path, '/data/wrfoutdata')
+            path = self.path_wrfout
             # 不同的方案和时间，在同一站点，各层气压值相差小于1度
             # 故不作分开考虑
             # flnm_pressure = os.path.join(path, 'pressure_Jul_YSU_latlon')
@@ -317,7 +321,9 @@ class GetWrfout(GetData):
             # 得到各层的pressure值
             # 不同时刻各层气压值，差别可以忽略不计,
             # 后面还要对气压层进行插值, 这里不对它做过高精度要求
-            path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
+            # path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
+            # path = os.path.join(self.path, '/data/wrfoutdata')
+            path = self.path_wrfout
             # 不同的方案和时间，在同一站点，各层气压值相差小于1度
             # 故不作分开考虑
             height_name = 'height_agl_'+self.month+'_YSU_latlon'
@@ -375,7 +381,7 @@ class GetWrfout(GetData):
         """
         file_name = str(var) + "_" + str(
             self.month) + "_" + str(model) + "_latlon"
-        flnm_var = os.path.join(self.path,'wrfout_data', file_name)
+        flnm_var = os.path.join(self.path_wrfout, file_name)
         ds_var = xr.open_dataset(flnm_var)
         da_var = ds_var[var]
         da_var = self.regrid_wrfout(da_var)
@@ -407,10 +413,13 @@ class TransferData(GetObs, GetWrfout):
     def get_data_one(self, var):
         """获取单个原始变量的值, 比如temp各试验+观测的值
         """
-        ds_obs = self.read_obs()  # 观测数据
+        # ds_obs = self.read_obs()  # 观测数据,科考资料 
+        ds_obs = xr.open_dataset('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')  # micaps资料
+        ds_obs = ds_obs[self.station['name']]
         if var in ['temp', 'td', 't_td', 'wind_s', 'height_agl']:
             var_dic = self.get_data_var(var)
-            var_dic['obs'] = ds_obs.sel(concat_dim=var)
+            # var_dic['obs'] = ds_obs.sel(concat_dim=var)
+            var_dic['obs'] = ds_obs.sel(var=var)
             # var_dic['fnl'] = self.get_data_fnl(var)
         else:
             print("该变量需要计算, 不能直接获取")
@@ -508,10 +517,19 @@ if __name__ == '__main__':
             'number': '56137',
             'height': 3315
         },
-
     }
-
-    station = station_dic['ShenZha']
+    # %%
+    # station = station_dic['TingRi']
+    station = station_dic['ShiQuanhe']
     tr = TransferData(station, 'May')
+    # %%
+    # aa = tr.get_data_one('temp')
+    # print(aa)
     model_dic = tr.transfer_data('rh')  # 多试验的某变量(temp, rh..)数据
     print(model_dic)
+    # %%
+    aa = model_dic['obs']
+    # for i in range(len(aa.time)):
+        # print(aa.isel(time=i))
+    print(aa)
+# %%

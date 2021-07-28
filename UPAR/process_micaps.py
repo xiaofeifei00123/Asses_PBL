@@ -62,7 +62,7 @@ class GetData():
         data_file, 字符串生成的虚假文件
         """
         # data_file = self.read_data_once()
-        col_names = ['pressure', 'height', 't', 'td', 'wind_direct', 'wind_speed']
+        col_names = ['pressure', 'height', 'temp', 'td', 'wind_d', 'wind_s']
         df = pd.read_table(
             data_file,  # 由字符串虚拟的文件
             sep='\\s+',
@@ -90,6 +90,7 @@ class GetData():
             fl_time = '20'+flnm[0:-4]
             # print(fl_time)
             tt = pd.to_datetime(fl_time, format='%Y%m%d%H')
+            tt = tt - pd.Timedelta(hours=8)
             # # 这时间是不规则的
             file_name = os.path.join(self.path_micaps, flnm)
             # print(file_name)
@@ -100,6 +101,9 @@ class GetData():
             ttt.append(tt)
             da = self.transpose_data_once(data_file)
             dda = da.interp(pressure=self.pressure_level)
+            # dda = da.interp(pressure=self.pressure_level,
+            #                 method='linear',
+            #                 kwargs={'fill_value': 'extrapolate'})
             # print(aa)
             da_time.append(dda)  # 很多时次都是到595hPa才有值, 气压和高度的对应关系会随着时间发展而变化, 气压坐标和高度坐标不能通用
         # da = xr.concat(da_time, dim='time')
@@ -180,6 +184,17 @@ if __name__ == '__main__':
         # print(da)
     # %%
     print(da)
+
     ds.to_netcdf('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')
+
+    # %%
+
+    dda = da.sel(var = 'td')
+    for i in range(len(da.time)):
+        
+        print(dda.isel(time=i))    
+    
+    
+
 
 # %%

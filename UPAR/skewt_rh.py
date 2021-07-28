@@ -52,25 +52,8 @@ class Draw_skewt():
 
         self.line_style_list = ['solid', 'dashed','solid', 'dashed','solid', 'solid', 'solid']
 
-    def draw_main(self, ):
+        self.path = '/mnt/zfm_18T/fengxiang/Asses_PBL/UPAR/picture_upar'
 
-        time_index = ['00', '06', '12']
-
-        # 循环出一个时次一个站点
-        for time_select in time_index:
-            ## 获得数据
-            tr = TransferData(self.station, self.month)
-            model_dic_theta_v = tr.transfer_data('theta_v')
-            model_dic_q = tr.transfer_data('rh')
-            model_dic_wind = tr.transfer_data('wind_s')
-            ## 画图
-            title = {'time': time_select, 'station_name': self.station['name']}
-            self.draw_upar(
-                model_dic_theta_v,
-                model_dic_q,
-                model_dic_wind,
-                title,
-            )
 
     def draw_upar(self, model_dic_theta_v, model_dic_q,
                   model_dic_wind, title_dic):
@@ -111,6 +94,7 @@ class Draw_skewt():
             model_q['fnl'] = \
                 model_dic_q['fnl'].sel(
                     time=time_index).mean(dim='time', skipna=True)
+
             model_wind[model_list[i]] = \
                 model_dic_wind[model_list[i]].sel(
                     time=time_index).mean(dim='time', skipna=True)
@@ -166,29 +150,49 @@ class Draw_skewt():
         )
 
         fig_name = title_dic['station_name'] + "_" +self.month+"_"+ title_dic['time']
-        path = '/home/fengxiang/Project/Asses_PBL/Draw/UPAR/picture_upar'
-        fgnm = os.path.join(path, fig_name)
+        fgnm = os.path.join(self.path, fig_name)
         fig.savefig(fgnm)
 
+    def draw_main(self, ):
+
+        # time_index = ['00', '06', '12']
+        # time_index = ['00', '12']
+        time_index = ['12']
+
+        # 循环出一个时次一个站点
+        for time_select in time_index:
+            ## 获得数据
+            tr = TransferData(self.station, self.month)
+            model_dic_theta_v = tr.transfer_data('theta_v')
+            model_dic_q = tr.transfer_data('rh')
+            model_dic_wind = tr.transfer_data('wind_s')
+            ## 画图
+            title = {'time': time_select, 'station_name': self.station['name']}
+            self.draw_upar(
+                model_dic_theta_v,
+                model_dic_q,
+                model_dic_wind,
+                title,
+            )
 
 if __name__ == '__main__':
 
     pass
     station_dic = {
-        'GaiZe': {
-            'lat': 32.3,
-            'lon': 84.0,
-            'name': 'GaiZe',
-            'number': '55248',
-            'height': 4400,
-        },
-        'ShenZha': {
-            'lat': 30.9,
-            'lon': 88.7,
-            'name': 'ShenZha',
-            'number': '55472',
-            'height': 4672
-        },
+        # 'GaiZe': {
+        #     'lat': 32.3,
+        #     'lon': 84.0,
+        #     'name': 'GaiZe',
+        #     'number': '55248',
+        #     'height': 4400,
+        # },
+        # 'ShenZha': {
+        #     'lat': 30.9,
+        #     'lon': 88.7,
+        #     'name': 'ShenZha',
+        #     'number': '55472',
+        #     'height': 4672
+        # },
         'ShiQuanhe': {
             'lat': 32.4,
             'lon': 80.1,
@@ -196,6 +200,41 @@ if __name__ == '__main__':
             'number': '55228',
             'height': 4280
         },
+        # 'TingRi': {
+        #     'lat': 28.63,
+        #     'lon': 87.08,
+        #     'name': 'TingRi',
+        #     'number': '55664',
+        #     'height': 4302
+        # },
+        # 'LaSa': {
+        #     'lat': 29.66,
+        #     'lon': 91.14,
+        #     'name': 'LaSa',
+        #     'number': '55591',
+        #     'height': 3648.8999
+        # },
+        # 'NaQu': {
+        #     'lat': 31.48,
+        #     'lon': 92.06,
+        #     'name': 'NaQu',
+        #     'number': '55299',
+        #     'height': 4508
+        # },
+        # 'LinZhi': {
+        #     'lat': 29.65,
+        #     'lon': 94.36,
+        #     'name': 'LinZhi',
+        #     'number': '56312',
+        #     'height':2991.8 
+        # },
+        # 'ChangDu': {
+        #     'lat': 31.15,
+        #     'lon': 97.17,
+        #     'name': 'ChangDu',
+        #     'number': '56137',
+        #     'height': 3315
+        # },
     }
     # 最终画图
     var_list = [
@@ -204,6 +243,6 @@ if __name__ == '__main__':
 
     for key in station_dic:
         station = station_dic[key]
-        Dr = Draw_skewt(station, 'Jul')
-        # Dr = Draw_skewt(station, 'May')
+        # Dr = Draw_skewt(station, 'Jul')
+        Dr = Draw_skewt(station, 'May')
         Dr.draw_main()
