@@ -186,13 +186,13 @@ if __name__ == '__main__':
 
     pass
     station_dic = {
-    #     'GaiZe': {
-    #         'lat': 32.3,
-    #         'lon': 84.0,
-    #         'name': 'GaiZe',
-    #         'number': '55248',
-    #         'height': 4400,
-    #     },
+        # 'GaiZe': {
+        #     'lat': 32.3,
+        #     'lon': 84.0,
+        #     'name': 'GaiZe',
+        #     'number': '55248',
+        #     'height': 4400,
+        # },
         # 'ShenZha': {
         #     'lat': 30.9,
         #     'lon': 88.7,

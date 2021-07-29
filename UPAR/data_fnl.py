@@ -29,7 +29,7 @@ class GetFnl():
         将它们聚合成一个ds文件
         """
         ## 这个支持正则表达式
-        path = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/*201607*00.grib2'  
+        path = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/*20160701*00.grib2'  
         # path = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/*201605*00.grib2'  
         # path = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/*20160[5,7]*00.grib2'  
         fl_list = os.popen('ls {}'.format(path))  # 打开一个管道
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     # %%
     print(ds_return)
     # ds_return.to_netcdf("/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201605.nc")
-    ds_return.to_netcdf("/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201607.nc")
+    # ds_return.to_netcdf("/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201607.nc")
     # %%
     # def get_fnl(ds):
     #     t = ds['temp'].squeeze(drop=True)

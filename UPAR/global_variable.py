@@ -17,13 +17,13 @@ station_dic = {
         'number': '55248',
         'height': 4400,
     },
-    'ShenZha': {
-        'lat': 30.9,
-        'lon': 88.7,
-        'name': 'ShenZha',
-        'number': '55472',
-        'height': 4672
-    },
+    # 'ShenZha': {
+    #     'lat': 30.9,
+    #     'lon': 88.7,
+    #     'name': 'ShenZha',
+    #     'number': '55472',
+    #     'height': 4672
+    # },
     'ShiQuanhe': {
         'lat': 32.4,
         'lon': 80.1,

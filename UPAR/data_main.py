@@ -435,9 +435,6 @@ class TransferData(GetObs, GetWrfout):
         # ds_obs = self.read_obs()  # 观测数据,科考资料 
         ds_obs = xr.open_dataset('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')  # micaps资料
         ds_obs = ds_obs[self.station['name']]
-        # print(ds_obs)
-        # return ds_obs
-        var_dic = {}
         if var in ['temp', 'td', 't_td', 'wind_s', 'height_agl']:
             var_dic = self.get_data_var(var)
             # var_dic['obs'] = ds_obs.sel(concat_dim=var)
@@ -495,19 +492,18 @@ if __name__ == '__main__':
 
     # %%
     # station = station_dic['TingRi']
-    station = station_dic['ShenZha']
+    station = station_dic['ShiQuanhe']
     tr = TransferData(station, 'May')
     # %%
+    # aa = tr.get_data_one('temp')
     # print(aa)
     model_dic = tr.transfer_data('theta_v')  # 多试验的某变量(temp, rh..)数据
     print(model_dic)  
     # TODO 别传model_dic了，全部换成ds
     # %%
-    aa = model_dic['obs']
-    # aa = model_dic['fnl']
+    # aa = model_dic['obs']
+    aa = model_dic['fnl']
     for i in range(len(aa.time)):
         print(aa.isel(time=i).values)
     # print(aa)
-# %%
-
 # %%
