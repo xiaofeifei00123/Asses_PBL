@@ -2,24 +2,9 @@
 # -*- encoding: utf-8 -*-
 '''
 Description:
-资料分类：
-    fnl资料
-        - 计算好了rh, q, u, v, t, td 都计算好了
-    micaps资料
-        - 原始的t, td, u, v, 整合为一个文件
-    加密探空资料
-        - 暂时处理不到，原始数据未做处理
-    wrfout资料
-        - 各要素单独存放为一个文件
-
-目标数据格式：
-    某站点(筛选出的经纬度)
-    多时次
-    多高度
-    多要素(t, td, rh, u, v, wind_s, theta_v, theta)
-    ds
-
-
+-----------------------
+放弃height变量的添加
+-----------------------
 获取探空观测图所需要的数据
 需要哪些资料(站点的，随高度和时间变化的):
     1. T -- 温度
@@ -66,41 +51,34 @@ from metpy.calc import mixing_ratio_from_specific_humidity
 from metpy.calc import virtual_potential_temperature
 from metpy.calc import potential_temperature
 from metpy.calc import relative_humidity_from_dewpoint
-from metpy.calc import dewpoint_from_relative_humidity
-from xarray.core import variable
-
-from global_variable import station_dic
 
 
 class GetData():
     """获取数据的公共变量
     """
-    # def __init__(self, station, month):
-    #     self.station = station
-    #     # self.pressure_level = np.arange(610, 100, -5)
-    #     self.pressure_level = np.arange(570, 280, -5)
-    #     self.path = '/mnt/zfm_18T/fengxiang/Asses_PBL/'
-    #     self.path_wrfout = '/mnt/zfm_18T/fengxiang/Asses_PBL/data/wrfout_data/'
-    #     self.model_list = ['ACM2', 'YSU', 'QNSE', 'QNSE_EDMF', 'TEMF']
+    def __init__(self, station, month):
+        self.station = station
+        # self.pressure_level = np.arange(610, 100, -5)
+        self.pressure_level = np.arange(570, 280, -5)
+        self.path = '/mnt/zfm_18T/Asses_PBL/'
+        self.model_list = ['ACM2', 'YSU', 'QNSE', 'QNSE_EDMF', 'TEMF']
         
-    #     self.month = month
+        self.month = month
 
-    #     # self.month = 'May'
-    #     if self.month == 'Jul':
-    #         self.month_num = '07'
-    #         self.time_first = '2016-07-01 13:00'
-    #         self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201607/upar_G_55228_2016070206.txt'
-    #         self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201607'
-    #         self.fnl_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201607.nc'
-    #     elif self.month == 'May':
-    #         # self.month = 'May'
-    #         self.month_num = '05'
-    #         self.time_first = '2016-05-01 13:00'
-    #         self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201605/upar_G_55228_2016051112.txt'
-    #         self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201605'
-    #         self.fnl_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201605.nc'
-    #     else:
-    #         print("%s这个月份不在数据集内"%self.month)
+        # self.month = 'May'
+        if self.month == 'Jul':
+            self.month_num = '07'
+            self.time_first = '2016-07-01 13:00'
+            self.flnm_height_obs = '/mnt/zfm_18T/Asses_PBL/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201607/upar_G_55228_2016070206.txt'
+            self.rh_file = '/mnt/zfm_18T/Asses_PBL/FNL/fnl_rh_201607'
+        elif self.month == 'May':
+            # self.month = 'May'
+            self.month_num = '05'
+            self.time_first = '2016-05-01 13:00'
+            self.flnm_height_obs = '/mnt/zfm_18T/Asses_PBL/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201605/upar_G_55228_2016051112.txt'
+            self.rh_file = '/mnt/zfm_18T/Asses_PBL/FNL/fnl_rh_201605'
+        else:
+            print("%s这个月份不在数据集内"%self.month)
             
     
 
@@ -141,87 +119,83 @@ class GetData():
             dic_return[key] = da
         return dic_return
 
-
-    def caculate_diagnostic(self, ds):
-        """计算比湿，位温等诊断变量
-        根据td或者rh计算q,theta_v
-        返回比湿q, 虚位温theta_v, 相对湿度rh
-
-        Args:
-            ds (Dataset): 包含有temp ,td的多维数据
-            这里传入Dataset合理一点
+    def caculate_diagnostic(self, dic_t, dic_td, var):
+        # -------------获取数据-------------------
+        """这个只能计算一个时次的
+        必须要求每一个点上都没有缺省值
+        计算，获取诊断变量
         """
-        pass        
-        ## 获得温度和露点温度
-        dims_origin = ds['temp'].dims  # 这是一个tuple, 初始维度顺序
-        ds = ds.transpose(*(...,'pressure'))
 
-        var_list = ds.data_vars
-        t = ds['temp']
+        q = {}  # specific humidity,比湿，水汽质量/气团总质量(g/g,g/kg)
+        w = {}  # mixing ratio
+        theta_v = {}  # virtual potential temperature
+        theta = {}  # potential temperature
+        dic_return = {}
+        rh = {}
 
-        ## 转换单位
-        pressure = units.Quantity(t.pressure.values, "hPa")
+        for model in dic_t:
+            ## 删除完全缺测列(时间), 主要是TEMF方案温度缺测
+            t = dic_t[model].dropna(dim='time', how='all')
+            time_coord = t.time.values
+            td = dic_td[model].sel(time=time_coord)  # 保证时间一致
 
-        ## 针对给的rh 或是td做不同的计算
-        ## 需要确定t的单位
-        if 'td' in var_list:
-            """探空资料的温度单位大多是degC"""
-            td = ds['td']
-            dew_point = units.Quantity(td.values, "degC")
+            ## 删除有缺测的行, 露点温度缺测较多
+            # td = td.dropna(dim='pressure')
+            td = td.dropna(dim='pressure', how='any')
+            # td = td.interpolate_na(dim='time', method='linear',fill_value='extrapolate')
+            # td = td.interpolate_na(dim='time')
+            prc = td.pressure.values
+            # height = td.height_coord.values
+
+            # for i in range(len(prc) - 1):
+            #     if prc[i] > prc[i + 1]:
+            #         break
+            # prc = prc[0:i + 1]
+            # height = height[0:i + 1]
+            t = t.sel(pressure=prc).dropna(dim='pressure')
+            td = td.sel(pressure=prc)
+
+            # 添加单位
+            pressure = units.Quantity(td.pressure.values, "hPa")
             temperature = units.Quantity(t.values, "degC")
-        elif 'rh' in var_list:
-            """FNL资料的单位是K"""
-            # rh = da.sel(variable='rh')
-            rh = ds['rh']
-            rh = units.Quantity(rh.values, "%")
-            temperature = units.Quantity(t.values, "K")
-            dew_point = dewpoint_from_relative_humidity(temperature, rh)
-        else:
-            print("输入的DataArray中必须要有rh或者td中的一个")
-        
-        ## 记录维度坐标
-        # time_coord = t.time.values
-        # pressure_coord = t.pressure.values
+            dew_point = units.Quantity(td.values, "degC")
 
-        ## 计算诊断变量
-        q = specific_humidity_from_dewpoint(pressure, dew_point)
-        w = mixing_ratio_from_specific_humidity(q)
-        theta_v = virtual_potential_temperature(pressure, temperature, w)
+            ## 计算维度
+            time_coord = t.time.values
+            pressure_coord = t.pressure.values
 
-        if 'td' in var_list:
-            rh = relative_humidity_from_dewpoint(temperature, dew_point)
-            var_name_list = ['q', 'rh', 'theta_v']
-            var_data_list = [q, rh, theta_v]
-        elif 'rh' in var_list:
-            pass
-            var_name_list = ['q', 'td', 'theta_v']
-            var_data_list = [q, dew_point, theta_v]
+            if var == 'theta_v':
+                q[model] = specific_humidity_from_dewpoint(
+                    pressure, dew_point)  # 比湿
+                w[model] = mixing_ratio_from_specific_humidity(q[model])
+                theta_v[model] = virtual_potential_temperature(
+                    pressure, temperature, w[model])
+                da = xr.DataArray(theta_v[model], coords=[
+                    time_coord, pressure_coord], dims=['time', 'pressure'])
+                # da['height_coord'] = ('pressure', t.height_coord)
+            elif var == 'rh':  # 相对湿度
+                rh[model] = relative_humidity_from_dewpoint(temperature, dew_point)
+                da = xr.DataArray(rh[model], coords=[
+                    time_coord, pressure_coord], dims=['time', 'pressure'])
+                # dic_return[model] = da
+            elif var == 'theta':
+                theta[model] = potential_temperature(pressure, temperature)
+                da = xr.DataArray(theta[model], coords=[
+                    time_coord, pressure_coord], dims=['time', 'pressure'])
+                # da['height_coord'] = ('pressure', t.height_coord)
+                # dic_return[model] = da
+            elif var == 'q':
+                q[model] = specific_humidity_from_dewpoint(
+                    pressure, dew_point)  # 比湿
+                # q[model] = q[model]*10**3  # 改变单位为g/kg
+                da = xr.DataArray(q[model]*1000, coords=[
+                    time_coord, pressure_coord], dims=['time', 'pressure'])
+            else:
+                print("没有这个诊断变量, 请检查")
+            # da['height_coord'] = ('pressure', t.height_coord)
+            dic_return[model] = da
 
-        ## 融合各物理量为一个DataArray
-
-        ds_return = xr.Dataset()
-
-        for var_name, var_data in zip(var_name_list, var_data_list):
-            pass
-            ## 为了去除单位
-            dda = xr.DataArray(
-                var_data, 
-                # coords=[time_coord,pressure_coord],
-                coords = t.coords,
-                dims=t.dims)
-                # dims=['time', 'pressure'])
-
-            ds_return[var_name] = xr.DataArray(
-                dda.values, 
-                # coords=[time_coord,pressure_coord],
-                coords=t.coords,
-                dims=t.dims)
-        # da_return  = ds_return.to_array()
-
-        ## 转换维度顺序        
-        # da_return = da_return.transpose(*dims_origin)
-        ds_return = ds_return.transpose(*dims_origin)
-        return ds_return
+        return dic_return
 
 class GetObs(GetData):
     """获取观测数据, 几种变量统一读取
@@ -320,9 +294,7 @@ class GetWrfout(GetData):
             # 得到各层的pressure值
             # 不同时刻各层气压值，差别可以忽略不计,
             # 后面还要对气压层进行插值, 这里不对它做过高精度要求
-            # path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
-            # path = os.path.join(self.path, '/data/wrfoutdata')
-            path = self.path_wrfout
+            path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
             # 不同的方案和时间，在同一站点，各层气压值相差小于1度
             # 故不作分开考虑
             # flnm_pressure = os.path.join(path, 'pressure_Jul_YSU_latlon')
@@ -345,9 +317,7 @@ class GetWrfout(GetData):
             # 得到各层的pressure值
             # 不同时刻各层气压值，差别可以忽略不计,
             # 后面还要对气压层进行插值, 这里不对它做过高精度要求
-            # path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
-            # path = os.path.join(self.path, '/data/wrfoutdata')
-            path = self.path_wrfout
+            path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
             # 不同的方案和时间，在同一站点，各层气压值相差小于1度
             # 故不作分开考虑
             height_name = 'height_agl_'+self.month+'_YSU_latlon'
@@ -405,7 +375,7 @@ class GetWrfout(GetData):
         """
         file_name = str(var) + "_" + str(
             self.month) + "_" + str(model) + "_latlon"
-        flnm_var = os.path.join(self.path_wrfout, file_name)
+        flnm_var = os.path.join(self.path,'wrfout_data', file_name)
         ds_var = xr.open_dataset(flnm_var)
         da_var = ds_var[var]
         da_var = self.regrid_wrfout(da_var)
@@ -437,13 +407,10 @@ class TransferData(GetObs, GetWrfout):
     def get_data_one(self, var):
         """获取单个原始变量的值, 比如temp各试验+观测的值
         """
-        # ds_obs = self.read_obs()  # 观测数据,科考资料 
-        ds_obs = xr.open_dataset('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')  # micaps资料
-        ds_obs = ds_obs[self.station['name']]
+        ds_obs = self.read_obs()  # 观测数据
         if var in ['temp', 'td', 't_td', 'wind_s', 'height_agl']:
             var_dic = self.get_data_var(var)
-            # var_dic['obs'] = ds_obs.sel(concat_dim=var)
-            var_dic['obs'] = ds_obs.sel(var=var)
+            var_dic['obs'] = ds_obs.sel(concat_dim=var)
             # var_dic['fnl'] = self.get_data_fnl(var)
         else:
             print("该变量需要计算, 不能直接获取")
@@ -465,22 +432,11 @@ class TransferData(GetObs, GetWrfout):
             var_dic_td = self.get_data_one('td')
             var_dic = self.caculate_diagnostic(var_dic_t,
                                             var_dic_td, var)
-            ## 读所有格点的fnl数据, 再插值就可以了
-            # var_dic = {}
+            ## 读所有格点的fnl数据, 再插值
             if var == 'rh':
                 # ds = xr.open_dataset('/mnt/zfm_18T/Asses_PBL/FNL/fnl_rh_201607')
-                # ds = xr.open_dataset(self.rh_file)
-                ds = xr.open_dataset(self.fnl_file)
+                ds = xr.open_dataset(self.rh_file)
                 da = ds.rh
-                ## 水平插值
-                da = da.sel(lat=self.station['lat'], 
-                                lon=self.station['lon'],
-                                method='nearest')
-                ## 垂直插值
-                var_dic['fnl'] = da.interp(pressure=self.pressure_level)
-            elif var == 'q':
-                ds = xr.open_dataset(self.fnl_file)
-                da = ds.q*10**3  # 改单位为g/kg
                 ## 水平插值
                 da = da.sel(lat=self.station['lat'], 
                                 lon=self.station['lon'],
@@ -495,20 +451,66 @@ class TransferData(GetObs, GetWrfout):
 
 if __name__ == '__main__':
 
-    # %%
-    # station = station_dic['TingRi']
-    station = station_dic['ShiQuanhe']
+    station_dic = {
+        'GaiZe': {
+            'lat': 32.3,
+            'lon': 84.0,
+            'name': 'GaiZe',
+            'number': '55248',
+            'height': 4400,
+        },
+        'ShenZha': {
+            'lat': 30.9,
+            'lon': 88.7,
+            'name': 'ShenZha',
+            'number': '55472',
+            'height': 4672
+        },
+        'ShiQuanhe': {
+            'lat': 32.4,
+            'lon': 80.1,
+            'name': 'ShiQuanhe',
+            'number': '55228',
+            'height': 4280
+        },
+        'LaSa': {
+            'lat': 29.66,
+            'lon': 91.14,
+            'name': 'LaSa',
+            'number': '55591',
+            'height': 3648.8999,
+        },
+        'TingRi': {
+            'lat': 28.63,
+            'lon': 87.08,
+            'name': 'TingRi',
+            'number': '55664',
+            'height': 4302,
+        },
+        'NaQU': {
+            'lat': 31.48,
+            'lon': 92.06,
+            'name': 'NaQu',
+            'number': '55299',
+            'height': 4508,
+        },
+        'LinZhi': {
+            'lat': 29.65,
+            'lon': 94.36,
+            'name': 'LinZhi',
+            'number': '56312',
+            'height': 2991.8,
+        },
+        'ChangDu': {
+            'lat': 31.15,
+            'lon': 97.17,
+            'name': 'ChangDU',
+            'number': '56137',
+            'height': 3315,
+        },
+    }
+
+    station = station_dic['ShenZha']
     tr = TransferData(station, 'May')
-    # %%
-    # aa = tr.get_data_one('temp')
-    # print(aa)
-    model_dic = tr.transfer_data('theta_v')  # 多试验的某变量(temp, rh..)数据
-    print(model_dic)  
-    # TODO 别传model_dic了，全部换成ds
-    # %%
-    # aa = model_dic['obs']
-    aa = model_dic['fnl']
-    for i in range(len(aa.time)):
-        print(aa.isel(time=i).values)
-    # print(aa)
-# %%
+    model_dic = tr.transfer_data('rh')  # 多试验的某变量(temp, rh..)数据
+    print(model_dic)

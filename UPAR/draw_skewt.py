@@ -16,7 +16,7 @@ from wrf import getvar, vinterp, interplevel
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import cmaps
-from get_cmap import get_cmap_temp
+from global_cmap import get_cmap_temp
 import datetime
 
 from data_process import TransferData

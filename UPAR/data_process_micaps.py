@@ -20,22 +20,20 @@ import os
 from io import StringIO
 from global_variable import station_dic
 
-class GetData():
+from data_process_main import GetData
+
+class GetMicaps(GetData):
     
     def __init__(self, station_number):
         pass
         self.station_number = station_number
-        # self.flnm = flnm
         self.path_micaps = '/mnt/zfm_18T/fengxiang/DATA/UPAR/Upar_2016/'
-        # self.path = '/mnt/zfm_18T/Asses_PBL/'
         self.pressure_level = np.arange(570, 280, -5)
 
     def read_data_once(self, flnm):
         """根据初始的txt文件
         筛选出需要的站点数据
         """
-        # flnm = self.flnm
-
         with open(flnm, 'r', encoding='gbk') as f:
             whole_text = f.read()
         pattern = '[0-9]+\s+\S+\.\d+\s+\S+\.\d+\s+\d+\s+\d+'
@@ -72,14 +70,11 @@ class GetData():
         )
         df = df.where(df < 9999, np.nan)  # 将缺省值赋值为NaN
         df = df.set_index(['pressure'])  # 将pressure这一列设为index
-        df.columns.name = 'var'
+        df.columns.name = 'variable'
         da = xr.DataArray(df)
         return da
 
     def data_micaps(self, ):
-        # number = self.station['number']
-        # path1 = os.path.join(self.path, "GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_")
-        # path = path1 + str(number) + "-2016"+self.month_num
         
         aa = os.listdir(self.path_micaps)  # 文件名列表
         aa.sort()  # 排一下顺序，这个是对列表本身进行操作
@@ -91,7 +86,7 @@ class GetData():
             # print(fl_time)
             tt = pd.to_datetime(fl_time, format='%Y%m%d%H')
             tt = tt - pd.Timedelta(hours=8)
-            # # 这时间是不规则的
+            ## 这时间是不规则的
             file_name = os.path.join(self.path_micaps, flnm)
             # print(file_name)
             data_file = self.read_data_once(file_name)
@@ -101,42 +96,32 @@ class GetData():
             ttt.append(tt)
             da = self.transpose_data_once(data_file)
             dda = da.interp(pressure=self.pressure_level)
-            # dda = da.interp(pressure=self.pressure_level,
-            #                 method='linear',
-            #                 kwargs={'fill_value': 'extrapolate'})
-            # print(aa)
             da_time.append(dda)  # 很多时次都是到595hPa才有值, 气压和高度的对应关系会随着时间发展而变化, 气压坐标和高度坐标不能通用
-        # da = xr.concat(da_time, dim='time')
         da_return = xr.concat(da_time, pd.Index(ttt, name='time'))
-        # print(da_return)
         return da_return
-        # ds.coords['time'] = ttt
-        # return ds
 
 if __name__ == '__main__':
+    pass
     # %%
     ds = xr.Dataset()
     for key in station_dic:
 
         station_number = station_dic[key]['number']
         # print(station_number)
-        gd = GetData(station_number=station_number)    
+        gd = GetMicaps(station_number=station_number)    
         da = gd.data_micaps()
-        ds[key] = da
-        # print(da)
-    # %%
-    # print(da)
+
+        da = da.transpose(*(...,'pressure'))
+        ds = da.to_dataset(dim='variable')
+        ds_diagnostic = gd.caculate_diagnostic(ds)
+        ## 将原来的变量和计算的诊断变量合并为一个DataArray
+        ds_return = xr.merge([ds, ds_diagnostic])
+        dda = ds_return.to_array()
+        ## 不同站点的数据组合为一个Dataset
+        ds[key] = dda
 
     ds.to_netcdf('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')
 
-    # %%
-
-    dda = da.sel(var = 'td')
-    for i in range(len(da.time)):
-        
-        print(dda.isel(time=i))    
-    
-    
-
-
-# %%
+    #-------------------------------
+    ## 测试
+    #-------------------------------
