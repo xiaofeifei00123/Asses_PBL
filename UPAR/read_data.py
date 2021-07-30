@@ -25,13 +25,12 @@ from global_variable import station_dic
 
 class GetData():
 
-    def __init__(self,month):
+    def __init__(self,):
         # self.flag = flag
         # self.area = area
         self.var = 'RAINNC'
         self.path_wrf = '/mnt/zfm_18T/fengxiang/Asses_PBL/data/wrfout_data'
         self.path_obs = '/mnt/zfm_18T/fengxiang/DATA/PRECIPTATION/CMORPH_STATION_RAIN'
-        self.month = month
 
     def get_rain_wrf(self, ):
         """循环出不同试验的结果, 返回空间分布的累计降水
@@ -40,9 +39,7 @@ class GetData():
         model_list = ['QNSE', 'QNSE_EDMF', 'TEMF','ACM2','YSU']
         file_list = []
         for i in model_list:
-            # flnm = str(self.var)+"_May_"+i+'_latlon'
-            ## 每一个试验保存为了一个文件
-            flnm = str(self.var)+"_"+str(self.month)+"_"+i+'_latlon'
+            flnm = str(self.var)+"_May_"+i+'_latlon'
             flnm = os.path.join(self.path_wrf, flnm)
             file_list.append(flnm)
         rain = xr.Dataset()
@@ -156,18 +153,6 @@ class TransferData():
             rrr = rain_night.sum(dim='time')
         return rrr
 
-    def rain_space_average(self,):
-        """返回完整区域数据，需要进行数据筛选，自己根据dataset进行数据mask
-        """
-        # ds = xr.open_dataset(flnm)
-        r = self.rain_hourly()
-        # shp_file = '/mnt/zfm_18T/fengxiang/DATA/SHP/shp_tp/Tibet.shp'
-        # shp = geopandas.read_file(shp_file)
-        r = r.mean(dim='lat')
-        r = r.mean(dim='lon')
-        # r = r.salem.roi(shape=shp)  # mask高原外的值
-        return r
-
     def rain_station(self, station):
         """返回完整区域数据，需要进行数据筛选，自己根据dataset进行数据mask
         """
@@ -180,6 +165,7 @@ class TransferData():
         # r = r.mean(dim='lon')
         # r = r.salem.roi(shape=shp)  # mask高原外的值
         return r
+
             
 
 if __name__ == '__main__':
@@ -190,9 +176,8 @@ if __name__ == '__main__':
     ### 获取数据
     time_flag = 'all' ## 白天还是夜间
     # time_flag = 'night' ## 白天还是夜间
-    area = {"lat1":24.875, "lat2":45.125, "lon1":70.875, "lon2":105.125} # 最大范围
-    month = 'May'
-    gd = GetData(month)
+    area = {"lat1":24.875, "lat2":45.125, "lon1":70.875, "lon2":105.125}
+    gd = GetData()
     rain = gd.get_rain_hourly()
     # aa = gd.get_rain_obs()
     # print(aa.values)
@@ -201,13 +186,12 @@ if __name__ == '__main__':
     # %%
     ### 筛选数据
     tr = TransferData(ds=rain, area=area, time_flag=time_flag)
-    station = station_dic['TingRi']
-
     # a = tr.rain_hourly()
     # b = tr.rain_time_total()
-    # print(b)
+    station = station_dic['GaiZe']
+    c = tr.rain_station(station)
+    print(c)
     # c = tr.rain_space_average()
-    d = tr.rain_station(station)
     
 
 # %%
