@@ -27,6 +27,8 @@ import matplotlib.ticker as mticker
 from matplotlib.pyplot import savefig
 # get_data = Get_data('night')
 
+from global_variable import station_dic
+
 
 class Draw():
     
