@@ -56,7 +56,10 @@ class GetData():
     def get_rain_obs(self,):
         """格点降水和CMORPH降水融合数据
         """
-        flnm = '/mnt/zfm_18T/fengxiang/DATA/PRECIPTATION/CMORPH_STATION_RAIN/05/CHN_PRCP_HOUR_MERG_DISPLAY_0.1deg.lnx.ctl'
+        if self.month == 'May':
+            flnm = '/mnt/zfm_18T/fengxiang/DATA/PRECIPTATION/CMORPH_STATION_RAIN/05/CHN_PRCP_HOUR_MERG_DISPLAY_0.1deg.lnx.ctl'
+        elif self.month == 'Jul':
+            flnm = '/mnt/zfm_18T/fengxiang/DATA/PRECIPTATION/CMORPH_STATION_RAIN/07/CHN_PRCP_HOUR_MERG_DISPLAY_0.1deg.lnx.ctl'
         ds = open_CtlDataset(flnm)
         da = ds.crain.squeeze(drop=True)
         da = da.where(da.values>=0, np.nan)

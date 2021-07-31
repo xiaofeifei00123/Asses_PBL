@@ -28,11 +28,26 @@ from matplotlib.pyplot import savefig
 # get_data = Get_data('night')
 
 from global_variable import station_dic
+import datetime
+
+
+# %%
+month = 'Jul'
+# month = 'May'
+gd = GetData(month)
+rain = gd.get_rain_hourly()
+
+# %%
+
+
+
+
 
 class Draw():
     
-    def __init__(self):
+    def __init__(self, month):
         self.fontsize = 10
+        self.month = month
 
     def draw_time_sequence(self,ax, dic):
 
@@ -59,7 +74,9 @@ class Draw():
             ax.plot(x_label, y, label=i, color=ccolor[j])
             j +=1 
 
-        ax.set_xticks(x_label[::24])  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
+        # ax.set_xticks(x_label[::24])  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
+        # ax.set_xticks(x_label[11::24])  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
+        ax.set_xticks(x_label)  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
         # ax.xaxis.set_tick_params(labelsize=15)
         ax.xaxis.set_tick_params(labelsize=self.fontsize*1.8)
         # ax.xaxis.set_major_formatter(x_label[::24])
@@ -115,24 +132,28 @@ class Draw():
             # tr = TransferData(ds=rain, area=area_dic['all'], time_flag=time_flag)
             # rain1 = tr.rain_space_average()
             rain1 = tr.rain_station(station_dic1[key])
+            # print(rain1)
             dic[key] = rain1
 
         for i,j in zip(range(4),dic):
             self.draw_time_sequence(axes[i], dic[j])
-        axes[0].set_ylim(0.0, 2.0)
-        axes[1].set_ylim(0.0, 2.0)
-        axes[2].set_ylim(0.0, 2.0)
-        axes[3].set_ylim(0.0, 2.0)
-        # axes[0].set_yticks(np.arange(0, 0.7, 0.1)) 
-        # axes[1].set_yticks(np.arange(0, 0.7, 0.1))
-        # axes[2].set_yticks(np.arange(0, 0.7, 0.1))
-        axes[0].set_yticks(np.arange(0, 2.1, 0.2))
-        axes[1].set_yticks(np.arange(0, 2.1, 0.2))
-        axes[2].set_yticks(np.arange(0, 2.1, 0.2))
-        axes[3].set_yticks(np.arange(0, 2.1, 0.2))
+            axes[i].set_ylim(0.0, 10.0)
+            axes[i].set_yticks(np.arange(0, 10.1, 2.0))
+        # axes[0].set_ylim(0.0, 2.0)
+        # axes[1].set_ylim(0.0, 2.0)
+        # axes[2].set_ylim(0.0, 2.0)
+        # axes[3].set_ylim(0.0, 2.0)
+        # # axes[0].set_yticks(np.arange(0, 0.7, 0.1)) 
+        # # axes[1].set_yticks(np.arange(0, 0.7, 0.1))
+        # # axes[2].set_yticks(np.arange(0, 0.7, 0.1))
+        # axes[0].set_yticks(np.arange(0, 2.1, 0.2))
+        # axes[1].set_yticks(np.arange(0, 2.1, 0.2))
+        # axes[2].set_yticks(np.arange(0, 2.1, 0.2))
+        # axes[3].set_yticks(np.arange(0, 2.1, 0.2))
             
         axes[3].legend(ncol=3 ,bbox_to_anchor=(0.5,-0.55) ,loc='lower center',fontsize=self.fontsize*2.0, edgecolor='white')
-        fig.suptitle("May", fontsize=self.fontsize*2.5)
+        # fig.suptitle("May", fontsize=self.fontsize*2.5)
+        fig.suptitle(self.month, fontsize=self.fontsize*2.5)
         fig.savefig('/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/rain_staion.png')
 
 
@@ -148,7 +169,6 @@ if __name__ == '__main__':
     ## 区域必须要有，它会给一个区域内的数据给你
     
     ## 选择时间范围和计算区域
-    # %%
 
     area_dic = {}
     area_dic['all'] = area0
@@ -156,25 +176,34 @@ if __name__ == '__main__':
     area_dic['south left'] = area2
     area_dic['south right'] = area3
     # print(area_dic)
-    month = 'Jul'
-    gd = GetData(month)
-    rain = gd.get_rain_hourly()
+    # month = 'Jul'
+    # gd = GetData(month)
+    # rain = gd.get_rain_hourly()
 
     # %%
 
     time_flag = 'all'
     flag = 'all'
     # tr = TransferData()    
-    station = station_dic['ShiQuanhe']
+    ## 选取最大范围和全部时间，保证能取出所需要的数据
+    time_index = rain['obs'].time.sel(time=datetime.time(int('12')))  
+    rain = rain.sel(time=time_index)
+
+
+    # %%
     tr = TransferData(ds=rain, area=area_dic['all'], time_flag=time_flag)
+    station = station_dic['TingRi']
     dd = tr.rain_station(station)
+
+    cc = dd.where(dd['obs']>0.1, drop=True)   # 满足条件的值保留，不满足条件的赋值为np.nan
+    # rain1 = tr.rain_station(station_dic1[key])
+    cc.time
 
     # aa = tr.rain_space_average()
     # print(aa)
     # %%
     
-
-    Dr = Draw()
+    Dr = Draw(month)
     # Dr.draw_time_sequence()
     Dr.combine_fig(tr)
     # pass
