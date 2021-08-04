@@ -9,6 +9,8 @@ Author           :Forxd
 Version          :1.0
 '''
 
+area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
+
 station_dic = {
     'GaiZe': {
         'lat': 32.3,
@@ -65,5 +67,54 @@ station_dic = {
         'name': 'ChangDu',
         'number': '56137',
         'height': 3315
+    },
+    'TuoTuohe': {
+        'lat': 34.22,
+        'lon': 92.44,
+        'name': 'ChangDu',
+        'number': '56004',
+        'height': 4542.5
+    },
+    'MangYa': {
+        'lat': 38.25,
+        'lon': 90.85,
+        'name': 'MangYa',
+        'number': '51886',
+        'height': 2951.2
+    },
+    'GeErmu': {
+        'lat': 36.42,
+        'lon': 94.91,
+        'name': 'GeErmu',
+        'number': '52818',
+        'height': 2812.3
+    },
+    'DuLan': {
+        'lat': 36.30,
+        'lon': 98.10,
+        'name': 'DuLan',
+        'number': '52836',
+        'height': 3197.7
+    },
+    'YuShu': {
+        'lat': 33.00,
+        'lon': 96.96,
+        'name': 'YuShu',
+        'number': '56029',
+        'height': 3723.3999
+    },
+    'DaRi': {
+        'lat': 33.76,
+        'lon': 99.65,
+        'name': 'DaRi',
+        'number': '56046',
+        'height': 3967.6001
+    },
+    'BaTang': {
+        'lat': 30,
+        'lon': 99.1,
+        'name': 'BaTang',
+        'number': '56247',
+        'height': 2589.2
     },
 }

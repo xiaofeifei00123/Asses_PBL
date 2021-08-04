@@ -15,6 +15,8 @@ prc那块重新给就行
 # 不同试验 
 # 不同变量
 # 不同站点
+各个站点所在的经纬度不一样，各格点对应的pressure高度不一样，
+所以对每个站点分别处理，比较慢
 -----------------------------------------
 Time             :2021/07/30 08:52:47
 Author           :Forxd
@@ -29,6 +31,8 @@ from wrf import getvar, vinterp, interplevel
 
 from data_process_main import GetData
 from global_variable import station_dic
+
+from functools import reduce
 
 class GetWrfout(GetData):
 
@@ -128,6 +132,7 @@ class GetWrfout(GetData):
         ds_var = xr.open_dataset(flnm_var)
         da_var = ds_var[var]
         da_var = self.regrid_wrfout(da_var)
+        # da_return = da_var.dropna(dim='time',how='all')
         return da_var
 
     def get_data_var(self, var):
@@ -154,43 +159,89 @@ class GetWrfout(GetData):
         return ds
         
 
-def get_station_one(station):
-    """获得一个站点的所有数据"""
-    gw = GetWrfout(station, month)
-    var_list = ['temp', 'td', 'wind_s']
+class SaveData():
+    
+    def get_station_one(self, station):
+        """获得一个站点的所有数据"""
+        gw = GetWrfout(station, month)
+        var_list = ['temp', 'td', 'wind_s']
 
-    ds_var = xr.Dataset()  # 不同变量的聚合
-    for var in var_list:
-        ds_model = gw.get_data_var(var)  # 不同模式的
-        da_model = ds_model.to_array()
-        da_model = da_model.rename({'variable':'model'}) # 完成不同模式的聚合
-        # print(da_model)
-        ds_var[var] = da_model
-    return ds_var
+        ds_var = xr.Dataset()  # 不同变量的聚合
+        for var in var_list:
+            ds_model = gw.get_data_var(var)  # 不同模式的
+            da_model = ds_model.to_array()
+            da_model = da_model.rename({'variable':'model'}) # 完成不同模式的聚合
+            # print(da_model)
+            ds_var[var] = da_model
+
+        # time_index = reduce(np.intersect1d,
+        time_index_temp = ds_var['temp'].sel(model='TEMF').dropna(dim='time', how='all').time.values 
+        time_index_td = ds_var['td'].sel(model='TEMF').dropna(dim='time', how='all').time.values 
+        time_index_wind_s = ds_var['wind_s'].sel(model='TEMF').dropna(dim='time', how='all').time.values 
+
+        time_index1 = np.intersect1d(time_index_temp, time_index_td)
+        time_index = np.intersect1d(time_index1, time_index_wind_s)
+        ds_return = ds_var.sel(time=time_index)
+        return ds_return
+
+    def save_station_nc(self, month):
+        """将不同站点的数据保存为一个文件
+        """
+            
+        ds_station = xr.Dataset()
+        gd = GetData()
+        for key in station_dic:
+            station = station_dic[key]
+            ds_var = self.get_station_one(station)
+            print("读[%s]站的数据" %key)
+            ds_var_diag = gd.caculate_diagnostic(ds_var)
+            ds_var_return = xr.merge([ds_var, ds_var_diag])
+            da_var = ds_var_return.to_array()
+            ds_station[station['name']] = da_var
+
+        flnm_save = '/mnt/zfm_18T/fengxiang/Asses_PBL/data/'+'wrfout_'+str(month)+"_station.nc"
+        ds_station.to_netcdf(flnm_save)
 
 if __name__ == '__main__':
     
-    month = 'May'
-    # month = 'Jul'
-
-    # %%
-        
-    ds_station = xr.Dataset()
-    gd = GetData()
-    for key in station_dic:
-        station = station_dic[key]
-        ds_var = get_station_one(station)
-        # print(ds_var)
-        ds_var_diag = gd.caculate_diagnostic(ds_var)
-        # %%
-        ds_var_return = xr.merge([ds_var, ds_var_diag])
-        da_var = ds_var_return.to_array()
-        ds_station[station['name']] = da_var
-
-    # %%
-    print(ds_station)
-    flnm_save = '/mnt/zfm_18T/fengxiang/Asses_PBL/data/'+'wrfout_'+str(month)+"_station.nc"
-    ds_station.to_netcdf(flnm_save)
+    for month in ['May', 'Jul']:
+        sd = SaveData()
+        sd.save_station_nc(month)
+    
     
 
 
+    # %%
+        
+    # ds_station = xr.Dataset()
+    # gd = GetData()
+    # for key in station_dic:
+    #     station = station_dic[key]
+    #     ds_var = get_station_one(station)
+    #     # print(ds_var)
+    #     ds_var_diag = gd.caculate_diagnostic(ds_var)
+    #     ds_var_return = xr.merge([ds_var, ds_var_diag])
+    #     da_var = ds_var_return.to_array()
+    #     ds_station[station['name']] = da_var
+
+    # # %%
+    # flnm_save = '/mnt/zfm_18T/fengxiang/Asses_PBL/data/'+'wrfout_'+str(month)+"_station.nc"
+    # # ds_station.to_netcdf(flnm_save)
+    
+
+
+    # --------------------------------------
+    #####          测试
+    # --------------------------------------
+    # %%
+    # month = 'Jul'
+    # station = station_dic['GaiZe']
+    # # %%
+    # gw = GetWrfout(station, month)
+    # # da = gw.get_data_single_once('td', 'TEMF')
+    # ds = get_station_one(station)
+    # # %%
+    # # da = ds_model['TEMF']
+
+
+# %%

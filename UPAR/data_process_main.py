@@ -75,34 +75,6 @@ from global_variable import station_dic
 class GetData():
     """获取数据的公共变量
     """
-    # def __init__(self, station, month):
-    #     self.station = station
-    #     # self.pressure_level = np.arange(610, 100, -5)
-    #     self.pressure_level = np.arange(570, 280, -5)
-    #     self.path = '/mnt/zfm_18T/fengxiang/Asses_PBL/'
-    #     self.path_wrfout = '/mnt/zfm_18T/fengxiang/Asses_PBL/data/wrfout_data/'
-    #     self.model_list = ['ACM2', 'YSU', 'QNSE', 'QNSE_EDMF', 'TEMF']
-        
-    #     self.month = month
-
-    #     # self.month = 'May'
-    #     if self.month == 'Jul':
-    #         self.month_num = '07'
-    #         self.time_first = '2016-07-01 13:00'
-    #         self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201607/upar_G_55228_2016070206.txt'
-    #         self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201607'
-    #         self.fnl_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201607.nc'
-    #     elif self.month == 'May':
-    #         # self.month = 'May'
-    #         self.month_num = '05'
-    #         self.time_first = '2016-05-01 13:00'
-    #         self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201605/upar_G_55228_2016051112.txt'
-    #         self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201605'
-    #         self.fnl_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201605.nc'
-    #     else:
-    #         print("%s这个月份不在数据集内"%self.month)
-            
-    
 
     def grads_data(self, model_dic):
         """ 子程序
@@ -223,292 +195,28 @@ class GetData():
         ds_return = ds_return.transpose(*dims_origin)
         return ds_return
 
-class GetObs(GetData):
-    """获取观测数据, 几种变量统一读取
-    """
-    def read_single(self, flnm):
-        """
-        读取单个文件的观测资料
-        因为变量的缺省不同，所以这里是分别对每个变量进行插值的
-        这里出现的这些问题，都是由于自己对pandas库不熟悉所导致的，
-        读取单个时次的观测数据
-        """
-        col_names = [
-            'pressure', 'height', 'temp', 'td', 't_td', 'wind_d', 'wind_s'
-        ]
-        ## 按列数据, 要哪几列的数据, 再命名
-        df = pd.read_table(
-            flnm,
-            sep=' ',
-            #  skiprows=0,
-            usecols=[26, 27, 29, 30, 31, 32, 33],
-            names=col_names,
-        )
-        df = df.where(df < 9999, np.nan)  # 将缺省值赋值为NaN
-        df = df.sort_values('pressure', ascending=False)  # 按照某一列排序
-        
-        # -------------------------------------------------------
-        # 将含有缺省值的行删掉
-        df1 = df.dropna(axis=0, subset=['pressure'])
-        df1 = df.dropna(axis=0, subset=['temp'])
-        # print(df1)
-        da_list = []
-        var_list = ['temp', 'td', 't_td', 'wind_s']
-        for var in var_list:
-            df2 = df1  # 每一次重新传入这个df1,尽可能多的保留数据
-            df2 = df2.dropna(axis=0, subset=[var])
-            # 坐标处理
-            df2 = df2.drop_duplicates('pressure', 'first')  # 返回副本
-            # print(df2)
-            # 改变pressure坐标为相对的还是绝对的
-            df2 = df2.set_index(['pressure'])  # 将pressure这一列设为index
-            df3 = df2
-            # print(df3)
-
-            # -------------------------------------------------------
-            # 对某些时次td没有值的，补充NaN值
-            if var in ['td', 't_td']:
-                if df3['t_td'].size == 0:
-                    da = xr.DataArray([np.nan, np.nan],
-                                      coords=[[0, 1]],
-                                      dims='pressure')
-                    df3['t_td'] = da.to_series()
-                elif df3['td'].size == 0:
-                    da = xr.DataArray([np.nan, np.nan],
-                                      coords=[[0, 1]],
-                                      dims='pressure')
-                    df3['td'] = da.to_series()
-            # -------------------------------------------------------
-            ## 垂直坐标处理, 允许有缺省值的出现
-            da = xr.DataArray.from_series(df3[var])
-            dda = da.interp(pressure=self.pressure_level)
-            da_list.append(dda)
-        da_return = xr.concat(da_list, dim=var_list)
-        return da_return
-
-    def read_obs(self, ):
-        number = self.station['number']
-        path1 = os.path.join(self.path, "GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_")
-        path = path1 + str(number) + "-2016"+self.month_num
-        aa = os.listdir(path)  # 文件名列表
-        aa.sort()  # 排一下顺序，这个是对列表本身进行操作
-        ds_time = []  # 每个时次变量的列表
-        ttt = []  # 时间序列列表
-        for flnm in aa:
-            fl_time = flnm[-14:-4]
-            tt = pd.to_datetime(fl_time, format='%Y%m%d%H')
-            ttt.append(tt)
-            # 这时间是不规则的
-            flnm = os.path.join(path, flnm)
-            aa = self.read_single(flnm)
-            ds_time.append(aa)  # 很多时次都是到595hPa才有值, 气压和高度的对应关系会随着时间发展而变化, 气压坐标和高度坐标不能通用
-        ds = xr.concat(ds_time, dim='time')
-        ds.coords['time'] = ttt
-        return ds
-
-
-class GetWrfout(GetData):
-    """
-    获取wrfout数据
-    """
-
-    def regrid_wrfout(self, da_temp):
-        """对数据进行水平插值和垂直插值,
-        先给数据添加prc属性，再插值到特定层上
-        """
-        def get_pressure_lev():
-            # 得到各层的pressure值
-            # 不同时刻各层气压值，差别可以忽略不计,
-            # 后面还要对气压层进行插值, 这里不对它做过高精度要求
-            # path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
-            # path = os.path.join(self.path, '/data/wrfoutdata')
-            path = self.path_wrfout
-            # 不同的方案和时间，在同一站点，各层气压值相差小于1度
-            # 故不作分开考虑
-            # flnm_pressure = os.path.join(path, 'pressure_Jul_YSU_latlon')
-            pressure_name = 'pressure_'+self.month+'_YSU_latlon'
-            flnm_pressure = os.path.join(path, pressure_name)
-            # flnm_pressure = os.path.join(path, 'pressure_Jul_YSU_latlon')
-            ds_pressure = xr.open_dataset(flnm_pressure)
-            pr = ds_pressure.pressure
-        
-            # prb = pr.sel(time='2016-07-01 13:00')
-            prb = pr.sel(time=self.time_first)
-            lat = self.station['lat']
-            lon = self.station['lon']
-            # prc = prb.sel(lat=32.13, lon=92.5, method='nearest')
-            prc = prb.sel(lat=lat, lon=lon, method='nearest')
-            # prc = prc[0] - prc  # 离地气压高度
-            return prc
-
-        def get_height_lev():
-            # 得到各层的pressure值
-            # 不同时刻各层气压值，差别可以忽略不计,
-            # 后面还要对气压层进行插值, 这里不对它做过高精度要求
-            # path = '/mnt/zfm_18T/Asses_PBL/wrfout_data/'
-            # path = os.path.join(self.path, '/data/wrfoutdata')
-            path = self.path_wrfout
-            # 不同的方案和时间，在同一站点，各层气压值相差小于1度
-            # 故不作分开考虑
-            height_name = 'height_agl_'+self.month+'_YSU_latlon'
-            # flnm_pressure = os.path.join(path, 'height_agl_Jul_YSU_latlon')
-            flnm_pressure = os.path.join(path, height_name)
-            ds = xr.open_dataset(flnm_pressure)
-            pr = ds.height_agl
-            # prb = pr.sel(time='2016-07-01 13:00')
-            prb = pr.sel(time=self.time_first)
-            lat = self.station['lat']
-            lon = self.station['lon']
-            # prc = prb.sel(lat=32.13, lon=92.5, method='nearest')
-            height = prb.sel(lat=lat, lon=lon, method='nearest')
-            prc = get_pressure_lev()
-            z = xr.DataArray(height.values, coords=[prc], dims=['pressure'])
-            z = z.interp(pressure=self.pressure_level)
-            return z.values
-
-        def regrid():
-            """对wrfout数据进行插值的
-            需要水平插值和垂直插值两项
-            Args:
-                da_temp (DataArray): 需要插值的变量
-
-            Returns:
-                DataArray: 插值后的变量
-            """
-            # 将bottom_top坐标换成气压坐标和高度坐标
-            time_coord = da_temp.time.values
-            lat_coord = da_temp.lat.values
-            lon_coord = da_temp.lon.values
-            prc = get_pressure_lev()
-            pressure_coord = prc.values
-            da_temp_reset = da_temp.values
-            da = xr.DataArray(
-                da_temp_reset,
-                coords=[time_coord, pressure_coord, lat_coord, lon_coord],
-                dims=['time', 'pressure', 'lat', 'lon'])
-            # 水平插值
-            da = da.sel(lat=self.station['lat'],
-                        lon=self.station['lon'],
-                        method='nearest')
-            # 垂直插值
-            da_return = da.interp(pressure=self.pressure_level)
-            # da_return = da
-            # z = get_height_lev()
-            # da_return['height_coord'] = ('pressure', z)
-            return da_return
-
-        return regrid()
-
-    def get_data_single_once(self, var, model):
-        """读一个模式一个变量的数据
-            模块尽可能的小
-        """
-        file_name = str(var) + "_" + str(
-            self.month) + "_" + str(model) + "_latlon"
-        flnm_var = os.path.join(self.path_wrfout, file_name)
-        ds_var = xr.open_dataset(flnm_var)
-        da_var = ds_var[var]
-        da_var = self.regrid_wrfout(da_var)
-        return da_var
-
-    def get_data_var(self, var):
-        model_dic = {}
-        for model in self.model_list:
-            if var in ['temp', 'td', 'height_agl']:
-                model_dic[model] = self.get_data_single_once(var, model)
-
-            elif var == 't_td':
-                t = self.get_data_single_once('temp', model)
-                td = self.get_data_single_once('td', model)
-                model_dic[model] = t - td
-
-            elif var == 'wind_s':
-                U = self.get_data_single_once('U', model)
-                V = self.get_data_single_once('V', model)
-                # model_dic[model] = t - td
-                model_dic[model] = xr.ufuncs.sqrt(U**2 + V**2)
-        return model_dic
-
-
-class TransferData(GetObs, GetWrfout):
-    """将获得的数据传递出去
-    """
-
-    def get_data_one(self, var):
-        """获取单个原始变量的值, 比如temp各试验+观测的值
-        """
-        # ds_obs = self.read_obs()  # 观测数据,科考资料 
-        ds_obs = xr.open_dataset('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')  # micaps资料
-        ds_obs = ds_obs[self.station['name']]
-        if var in ['temp', 'td', 't_td', 'wind_s', 'height_agl']:
-            var_dic = self.get_data_var(var)
-            # var_dic['obs'] = ds_obs.sel(concat_dim=var)
-            var_dic['obs'] = ds_obs.sel(var=var)
-            # var_dic['fnl'] = self.get_data_fnl(var)
-        else:
-            print("该变量需要计算, 不能直接获取")
-        return var_dic
-
-    def transfer_data(self, var):
-        """传递数据、存储数据
-        对数据进行统一插值处理
-        """
-        # ds_obs = self.read_obs()  # 观测数据
-        if var in ['temp', 'td', 't_td', 'wind_s', 'height_agl']:
-            var_dic = self.get_data_one(var)
-        elif var[-5:] == 'grads':  # 所有的变量都可以求梯度
-            var = var[0:-6]
-            var_dic = self.get_data_one(var)
-            var_dic = self.grads_data(var_dic)
-        elif var in ['theta_v', 'q', 'theta', 'rh']:
-            var_dic_t = self.get_data_one('temp')
-            var_dic_td = self.get_data_one('td')
-            var_dic = self.caculate_diagnostic(var_dic_t,
-                                            var_dic_td, var)
-            ## 读所有格点的fnl数据, 再插值就可以了
-            # var_dic = {}
-            if var == 'rh':
-                # ds = xr.open_dataset('/mnt/zfm_18T/Asses_PBL/FNL/fnl_rh_201607')
-                # ds = xr.open_dataset(self.rh_file)
-                ds = xr.open_dataset(self.fnl_file)
-                da = ds.rh
-                ## 水平插值
-                da = da.sel(lat=self.station['lat'], 
-                                lon=self.station['lon'],
-                                method='nearest')
-                ## 垂直插值
-                var_dic['fnl'] = da.interp(pressure=self.pressure_level)
-            elif var == 'q':
-                ds = xr.open_dataset(self.fnl_file)
-                da = ds.q*10**3  # 改单位为g/kg
-                ## 水平插值
-                da = da.sel(lat=self.station['lat'], 
-                                lon=self.station['lon'],
-                                method='nearest')
-                ## 垂直插值
-                var_dic['fnl'] = da.interp(pressure=self.pressure_level)
-        else:
-            print("输入错误")
-            var_dic = None
-        return var_dic
-
+class SaveData():
+    pass
 
 if __name__ == '__main__':
+    pass
+
+
 
     # %%
     # station = station_dic['TingRi']
-    station = station_dic['ShiQuanhe']
-    tr = TransferData(station, 'May')
-    # %%
-    # aa = tr.get_data_one('temp')
-    # print(aa)
-    model_dic = tr.transfer_data('theta_v')  # 多试验的某变量(temp, rh..)数据
-    print(model_dic)  
-    # TODO 别传model_dic了，全部换成ds
-    # %%
-    # aa = model_dic['obs']
-    aa = model_dic['fnl']
-    for i in range(len(aa.time)):
-        print(aa.isel(time=i).values)
-    # print(aa)
-# %%
+#     station = station_dic['ShiQuanhe']
+#     tr = TransferData(station, 'May')
+#     # %%
+#     # aa = tr.get_data_one('temp')
+#     # print(aa)
+#     model_dic = tr.transfer_data('theta_v')  # 多试验的某变量(temp, rh..)数据
+#     print(model_dic)  
+#     # TODO 别传model_dic了，全部换成ds
+#     # %%
+#     # aa = model_dic['obs']
+#     aa = model_dic['fnl']
+#     for i in range(len(aa.time)):
+#         print(aa.isel(time=i).values)
+#     # print(aa)
+# # %%

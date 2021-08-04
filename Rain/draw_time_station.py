@@ -21,21 +21,14 @@ import pandas as pd
 import salem  # 过滤高原外的数据
 import geopandas
 
-# import matplotlib.pyplot as plot
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 from matplotlib.pyplot import savefig
-# get_data = Get_data('night')
 
 from global_variable import station_dic
 import datetime
 
 
-# %%
-month = 'Jul'
-# month = 'May'
-gd = GetData(month)
-rain = gd.get_rain_hourly()
 
 # %%
 
@@ -74,16 +67,12 @@ class Draw():
             ax.plot(x_label, y, label=i, color=ccolor[j])
             j +=1 
 
-        # ax.set_xticks(x_label[::24])  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
-        # ax.set_xticks(x_label[11::24])  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
-        ax.set_xticks(x_label)  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
+        ax.set_xticks(x_label[::2])  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
         # ax.xaxis.set_tick_params(labelsize=15)
-        ax.xaxis.set_tick_params(labelsize=self.fontsize*1.8)
-        # ax.xaxis.set_major_formatter(x_label[::24])
-        ax.xaxis.set_minor_locator(plt.MultipleLocator(4))
+        ax.xaxis.set_tick_params(labelsize=self.fontsize*1.8, rotation=45)
         ax.tick_params(which='major',length=8,width=1.0) # 控制标签大小 
         ax.tick_params(which='minor',length=4,width=0.5)  #,colors='b')
-        # ax.xaxis.set_minor_locator(x_label.values[::12])
+        ax.xaxis.set_minor_locator(plt.MultipleLocator(1))
         # ax.set_yticks(np.arange(0, 5.01, 0.1))  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
         ax.yaxis.set_tick_params(labelsize=self.fontsize*1.8)
         # ax.set_ylim(0,5.1)
@@ -96,7 +85,7 @@ class Draw():
     
     def combine_fig(self, tr):
 
-        fig = plt.figure(figsize=(20, 16), dpi=200)  # 创建页面
+        fig = plt.figure(figsize=(16, 20), dpi=200)  # 创建页面
         grid = plt.GridSpec(4,
                             1,
                             figure=fig,
@@ -113,106 +102,72 @@ class Draw():
         axes[2] = fig.add_subplot(grid[2])
         axes[3] = fig.add_subplot(grid[3])
 
-        axes[0].set_title("GaiZe", fontsize=self.fontsize*2.0, loc='left', y=0.88, x=0.05)
-        axes[1].set_title("ShenZha", fontsize=self.fontsize*2.0, loc='left', y=0.88, x=0.05)
-        axes[2].set_title("ShiQuanhe", fontsize=self.fontsize*2.0, loc='left', y=0.88, x=0.05)
-        axes[3].set_title("LaSa", fontsize=self.fontsize*2.0, loc='left', y=0.88, x=0.05)
         time_flag=all
         dic = {}
 
-        station_dic1 = {'GaiZe':station_dic['GaiZe'], 
-                   'ShenZha':station_dic['ShenZha'],
-                   'ShiQuanhe':station_dic['ShiQuanhe'],
-                   'LaSa':station_dic['LaSa'],
+        station_list = ['GaiZe', ]
+
+        station_dic1 = {
+                'ShiQuanhe':station_dic['ShiQuanhe'],
+                'GaiZe':station_dic['GaiZe'], 
+                'ShenZha':station_dic['ShenZha'],
+                'TingRi':station_dic['TingRi'],
                     }        
         
+        station_dic2 = {
+                'TuoTuohe':station_dic['TuoTuohe'],
+                'NaQu':station_dic['NaQu'], 
+                'LaSa':station_dic['LaSa'],
+                'LinZhi':station_dic['LinZhi'],
+                    }        
+        station_dic3 = {
+                'ChangDu':station_dic['ChangDu'],
+                'MangYa':station_dic['MangYa'], 
+                'GeErmu':station_dic['GeErmu'],
+                'DuLan':station_dic['DuLan'],
+                    }        
 
-        for key in station_dic1:
-            # print(key)
-            # tr = TransferData(ds=rain, area=area_dic['all'], time_flag=time_flag)
-            # rain1 = tr.rain_space_average()
-            rain1 = tr.rain_station(station_dic1[key])
-            # print(rain1)
+        i = 0
+        station_dic_dic = station_dic3  # 这里要改
+        for key in station_dic_dic:  
+            rain1 = tr.rain_station(station_dic_dic[key])  
             dic[key] = rain1
+            axes[i].set_title(key, fontsize=self.fontsize*2.0, loc='left', y=0.88, x=0.05)
+            i += 1
 
         for i,j in zip(range(4),dic):
             self.draw_time_sequence(axes[i], dic[j])
             axes[i].set_ylim(0.0, 10.0)
             axes[i].set_yticks(np.arange(0, 10.1, 2.0))
-        # axes[0].set_ylim(0.0, 2.0)
-        # axes[1].set_ylim(0.0, 2.0)
-        # axes[2].set_ylim(0.0, 2.0)
-        # axes[3].set_ylim(0.0, 2.0)
-        # # axes[0].set_yticks(np.arange(0, 0.7, 0.1)) 
-        # # axes[1].set_yticks(np.arange(0, 0.7, 0.1))
-        # # axes[2].set_yticks(np.arange(0, 0.7, 0.1))
-        # axes[0].set_yticks(np.arange(0, 2.1, 0.2))
-        # axes[1].set_yticks(np.arange(0, 2.1, 0.2))
-        # axes[2].set_yticks(np.arange(0, 2.1, 0.2))
-        # axes[3].set_yticks(np.arange(0, 2.1, 0.2))
             
         axes[3].legend(ncol=3 ,bbox_to_anchor=(0.5,-0.55) ,loc='lower center',fontsize=self.fontsize*2.0, edgecolor='white')
         # fig.suptitle("May", fontsize=self.fontsize*2.5)
         fig.suptitle(self.month, fontsize=self.fontsize*2.5)
-        fig.savefig('/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/rain_staion.png')
+        flnm = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/rain_staion3_'+self.month+'.png'   # 这里要改
+        fig.savefig(flnm)
 
 
 
 if __name__ == '__main__':
-    # area0 = {"lat1":24.875, "lat2":46.125, "lon1":70.875, "lon2":105.125}
-    area0 = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
-    area1 = {"lat1":33.5, "lat2":40, "lon1":80, "lon2":90}  # north
-    area2 = {"lat1":28, "lat2":33, "lon1":83, "lon2":94}  # south left 
-    area3 = {"lat1":26, "lat2":33, "lon1":95, "lon2":103}  # south right
-    area4 = {"lat1":27, "lat2":28, "lon1":86, "lon2":92}  # bottom
-
-    ## 区域必须要有，它会给一个区域内的数据给你
-    
-    ## 选择时间范围和计算区域
-
-    area_dic = {}
-    area_dic['all'] = area0
-    area_dic['north'] = area1
-    area_dic['south left'] = area2
-    area_dic['south right'] = area3
-    # print(area_dic)
-    # month = 'Jul'
-    # gd = GetData(month)
-    # rain = gd.get_rain_hourly()
-
-    # %%
+    area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
+    month = 'Jul'
+    # month = 'May'
+    gd = GetData(month)
+    rain = gd.get_rain_hourly()
 
     time_flag = 'all'
     flag = 'all'
-    # tr = TransferData()    
+    da_obs = rain['obs']
     ## 选取最大范围和全部时间，保证能取出所需要的数据
-    time_index = rain['obs'].time.sel(time=datetime.time(int('12')))  
-    rain = rain.sel(time=time_index)
+    time_index_12 = da_obs.time.sel(time=datetime.time(int('12')))  
+    time_index_00 = da_obs.time.sel(time=datetime.time(int('00')))  
+    time_index = np.union1d(time_index_00.values, time_index_12.values)
+    rain2 = rain.sel(time=time_index)
 
 
     # %%
-    tr = TransferData(ds=rain, area=area_dic['all'], time_flag=time_flag)
-    station = station_dic['TingRi']
-    dd = tr.rain_station(station)
-
-    cc = dd.where(dd['obs']>0.1, drop=True)   # 满足条件的值保留，不满足条件的赋值为np.nan
-    # rain1 = tr.rain_station(station_dic1[key])
-    cc.time
-
-    # aa = tr.rain_space_average()
-    # print(aa)
-    # %%
-    
+    tr = TransferData(ds=rain2, area=area, time_flag=time_flag)
     Dr = Draw(month)
-    # Dr.draw_time_sequence()
     Dr.combine_fig(tr)
-    # pass
-
-
-
-
-    
-
-
 
 # %%

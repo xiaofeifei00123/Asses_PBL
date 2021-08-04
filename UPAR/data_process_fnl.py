@@ -106,9 +106,9 @@ class GetFnl():
 
 if __name__ == '__main__':
     pass
-    # %%
-    ## 对fnl数据进行聚合和计算
-    # gf = GetFnl()
+    
+    # 对fnl数据进行聚合和计算
+    gf = GetFnl()
     # ds = gf.concat_fnl()
     # gd = GetData()
     # ds_diag = gd.caculate_diagnostic(ds)
@@ -116,10 +116,10 @@ if __name__ == '__main__':
     # ds_return['wind_s'] = xr.ufuncs.sqrt(ds['u']**2+ds['v']**2)
     # ds_return.to_netcdf("/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_2016.nc")
     
-    ## 对fnl数据进行插值
-    # dd = gf.get_station()
-    # fnl_station_path = '/mnt/zfm_18T/fengxiang/Asses_PBL/data/fnl_station.nc'
-    # dd.to_netcdf(fnl_station_path)
+    # 对fnl数据进行插值
+    dd = gf.get_station()
+    fnl_station_path = '/mnt/zfm_18T/fengxiang/Asses_PBL/data/fnl_station.nc'
+    dd.to_netcdf(fnl_station_path)
 
 
 

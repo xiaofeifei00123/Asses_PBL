@@ -103,9 +103,10 @@ class GetMicaps(GetData):
 if __name__ == '__main__':
     pass
     # %%
-    ds = xr.Dataset()
+    ds_nc = xr.Dataset()
     for key in station_dic:
 
+        print("读取 %s 站的数据"%key)
         station_number = station_dic[key]['number']
         # print(station_number)
         gd = GetMicaps(station_number=station_number)    
@@ -118,9 +119,9 @@ if __name__ == '__main__':
         ds_return = xr.merge([ds, ds_diagnostic])
         dda = ds_return.to_array()
         ## 不同站点的数据组合为一个Dataset
-        ds[key] = dda
+        ds_nc[key] = dda
 
-    ds.to_netcdf('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')
+    ds_nc.to_netcdf('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')
 
     #-------------------------------
     ## 测试
