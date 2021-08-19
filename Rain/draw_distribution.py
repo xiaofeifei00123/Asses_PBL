@@ -3,14 +3,15 @@
 '''
 Description:
 画降水空间分布图
+白天、夜间、所有时次的总降水分布
 -----------------------------------------
 Time             :2021/06/15 17:21:14
 Author           :Forxd
 Version          :1.0
 '''
 
-from pandas.core import frame
-from shapely.ops import transform
+# from pandas.core import frame
+# from shapely.ops import transform
 # import xarray as xr
 # import pandas as pd
 import numpy as np
@@ -40,37 +41,48 @@ from read_data import TransferData
 from read_data import GetData
 from get_cmap import get_cmap_rain
 
+from global_variable import station_dic
+
+
+
 
 class Draw(object):
 
     def __init__(self, fig_name, flag) -> None:
         self.fig_name = fig_name
         self.flag = flag
+        ## 所有路径推荐使用绝对路径
         self.path_province = '/mnt/zfm_18T/fengxiang/DATA/SHP/Map/cn_shp/Province_9/Province_9.shp'
         self.path_tibet = '/mnt/zfm_18T/fengxiang/DATA/SHP/shp_tp/Tibet.shp'
-        self.picture_path = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain_May/picture'
+        self.picture_path = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/picture'
 
-        self.levels = [1, 5, 10, 25, 50, 100, 200,
+        self.levels = [10, 25,  50, 75, 100, 200,
                        250, 300, 400, 600, 800, 1000,]
+        # self.levels = [1, 5, 10, 25, 50, 100, 200,
+        #                250, 300, 400, 600, 800, 1000,]
         # self.levels = [0.1, 0.5, 1, 2.5, 5.0, 10.0, 20.0,
         #                25.0, 30.0, 40.0, 60.0, 80.0, 100.0,]
+    
 
     def draw_station(self, ax):
-        station = {
-            'NQ': {'lat': 31.4, 'lon': 92.0},
-            'LS': {'lat': 29.6, 'lon': 91.1},
-            'TTH': {'lat': 34.2, 'lon': 92.4},
-            'GZ': {'lat': 32.3, 'lon': 84.0},
-            'SZ': {'lat': 30.9, 'lon': 88.7},
-            'SQH': {'lat': 32.4, 'lon': 80.1},
-        }
+        # station = {
+        #     'NQ': {'lat': 31.4, 'lon': 92.0},
+        #     'LS': {'lat': 29.6, 'lon': 91.1},
+        #     'TTH': {'lat': 34.2, 'lon': 92.4},
+        #     'GZ': {'lat': 32.3, 'lon': 84.0},
+        #     'SZ': {'lat': 30.9, 'lon': 88.7},
+        #     'SQH': {'lat': 32.4, 'lon': 80.1},
+        # }
+        station = station_dic
         values = station.values()
-        station_name = list(station.keys())
+        # station_name = list(station.keys())
+        station_name = []
         x = []
         y = []
         for i in values:
             y.append(float(i['lat']))
             x.append(float(i['lon']))
+            station_name.append(i['abbreviation'])
 
         # 标记出站点
         ax.scatter(x,
@@ -115,7 +127,7 @@ class Draw(object):
             edgecolor='k',
             facecolor='none')
 
-        ax.add_feature(provinces, linewidth=0.6, zorder=2)
+        # ax.add_feature(provinces, linewidth=0.6, zorder=2)
         ax.add_feature(Tibet, linewidth=0.6, zorder=2)  # 添加青藏高原区域
 
         # --设置图像刻度
@@ -135,10 +147,10 @@ class Draw(object):
         norm = mpl.colors.BoundaryNorm(self.levels, cmap.N, extend='both')
         ax = self.create_map(ax)  # 创建坐标图像
 
-        if title[0] == 'obs':
-            pass
-            self.draw_patch(ax)
-            print("yes")
+        # if title[0] == 'obs':
+        #     pass
+        #     self.draw_patch(ax)
+        # #     print("yes")
 
         x = data.lon
         y = data.lat
@@ -228,7 +240,7 @@ class Draw(object):
         self.draw_contourf(rain['TEMF'].salem.roi(
             shape=shp), axes[4], cmap, ['TEMF', '(e)', time_2005])
         cf = self.draw_contourf(rain['obs'].salem.roi(
-            shape=shp), axes[5], cmap, ['obs', '(f)', time_2005])
+            shape=shp), axes[5], cmap, ['OBS', '(f)', time_2005])
         ax6 = fig.add_axes([0.18, 0.06, 0.7, 0.02])  # 重新生成一个新的坐标图
 
         cb = fig.colorbar(
@@ -262,23 +274,30 @@ def draw_hourly():
 
 if __name__ == '__main__':
 
+    # time_flag = 'all'
     # time_flag = 'day'
-    time_flag = 'all'
+    time_flag = 'night'
     area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
+    # month = 'Jul'
+    month = 'May'
 
     # %%
 
     # %%
-    gd = GetData()
+    gd = GetData(month)
     rain = gd.get_rain_hourly()
 
     # %%
     tr = TransferData(ds=rain, area=area, time_flag=time_flag)
     rain = tr.rain_time_total()
-    rain = rain-rain['obs']
-    fig_name = 'rain_'+time_flag
+    # rain = rain-rain['obs']
+    fig_name = 'rain_'+month + "_"+time_flag
     dr = Draw(fig_name, time_flag)
     dr.draw_main(rain)
+
+
+
+    ## 测试逐小时降水画
     # rain = tr.rain_hourly()
     # rain = rain-rain['obs']
     # print(rain['obs'])

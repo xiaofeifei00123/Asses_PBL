@@ -3,9 +3,10 @@
 '''
 Description:
 画时间序列图, 各区域降水量24小时的变化
+站点降水的时间序列
 -----------------------------------------
 Time             :2021/06/04 14:32:20
-Author           :Forxd
+Author          :Forxd
 Version          :1.0
 '''
     
@@ -67,7 +68,7 @@ class Draw():
             ax.plot(x_label, y, label=i, color=ccolor[j])
             j +=1 
 
-        ax.set_xticks(x_label[::2])  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
+        ax.set_xticks(x_label[::24])  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
         # ax.xaxis.set_tick_params(labelsize=15)
         ax.xaxis.set_tick_params(labelsize=self.fontsize*1.8, rotation=45)
         ax.tick_params(which='major',length=8,width=1.0) # 控制标签大小 
@@ -128,7 +129,7 @@ class Draw():
                     }        
 
         i = 0
-        station_dic_dic = station_dic3  # 这里要改
+        station_dic_dic = station_dic1  # 这里要改
         for key in station_dic_dic:  
             rain1 = tr.rain_station(station_dic_dic[key])  
             dic[key] = rain1
@@ -137,13 +138,13 @@ class Draw():
 
         for i,j in zip(range(4),dic):
             self.draw_time_sequence(axes[i], dic[j])
-            axes[i].set_ylim(0.0, 10.0)
-            axes[i].set_yticks(np.arange(0, 10.1, 2.0))
+            axes[i].set_ylim(0.0, 20.0)
+            axes[i].set_yticks(np.arange(0, 20.1, 2.0))
             
         axes[3].legend(ncol=3 ,bbox_to_anchor=(0.5,-0.55) ,loc='lower center',fontsize=self.fontsize*2.0, edgecolor='white')
         # fig.suptitle("May", fontsize=self.fontsize*2.5)
         fig.suptitle(self.month, fontsize=self.fontsize*2.5)
-        flnm = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/rain_staion3_'+self.month+'.png'   # 这里要改
+        flnm = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/rain_staion1_'+self.month+'.png'   # 这里要改
         fig.savefig(flnm)
 
 
@@ -163,6 +164,7 @@ if __name__ == '__main__':
     time_index_00 = da_obs.time.sel(time=datetime.time(int('00')))  
     time_index = np.union1d(time_index_00.values, time_index_12.values)
     rain2 = rain.sel(time=time_index)
+    rain2 = rain
 
 
     # %%
