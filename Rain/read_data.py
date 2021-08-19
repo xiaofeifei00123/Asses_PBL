@@ -112,8 +112,10 @@ class TransferData():
         day_list = []
         night_list = []
         for i in time_list:
-            hour = str(i)[11:13]
-            if int(hour) <= 13:  # 00时--13时时白天, 14--23时是夜间
+            hour = str(i)[11:13]  # 对时间进行切片, 得到时次
+            if int(hour) <= 13:  # 00时--13时时+23时白天, , 14--22时是夜间
+                day_list.append(i)
+            elif int(hour) == 23:
                 day_list.append(i)
             else:
                 night_list.append(i)

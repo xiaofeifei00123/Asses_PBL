@@ -12,14 +12,6 @@ Version          :1.0
 area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
 
 station_dic = {
-    'GaiZe': {
-        'abbreviation':'Gz',
-        'lat': 32.3,
-        'lon': 84.0,
-        'name': 'GaiZe',
-        'number': '55248',
-        'height': 4400,
-    },
     # 'ShenZha': {
     #     'abbreviation':'SZ',
     #     'lat': 30.9,
@@ -35,6 +27,14 @@ station_dic = {
         'name': 'ShiQuanhe',
         'number': '55228',
         'height': 4280
+    },
+    'GaiZe': {
+        'abbreviation':'Gz',
+        'lat': 32.3,
+        'lon': 84.0,
+        'name': 'GaiZe',
+        'number': '55248',
+        'height': 4400,
     },
     'TingRi': {
         'abbreviation':'TR',

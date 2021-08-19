@@ -271,9 +271,40 @@ def draw_hourly():
         dr = Draw(fig_name, time_flag)
         dr.draw_main(rain_hour)
 
+def draw_dual():
+    # 一次画多个需要的图
+    time_flag = 'night'
+    area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
+    # month = 'Jul'
+    month = 'May'
+
+    month_list = ['May', 'Jul']
+    time_list = ['all', 'day', 'night']
+    for month in month_list:
+        for time_flag in time_list:
+
+            gd = GetData(month)
+            rain = gd.get_rain_hourly()
+
+            # %%
+            tr = TransferData(ds=rain, area=area, time_flag=time_flag)
+            rain = tr.rain_time_total()
+            # rain = rain-rain['obs']
+            fig_name = 'rain_'+month + "_"+time_flag
+            print("画  %s" %fig_name)
+            dr = Draw(fig_name, time_flag)
+            dr.draw_main(rain)
+
 
 if __name__ == '__main__':
 
+    draw_dual()
+
+
+
+
+## --------------------------------------------
+''' ## 按照白天、夜间和月份画降水
     # time_flag = 'all'
     # time_flag = 'day'
     time_flag = 'night'
@@ -293,10 +324,12 @@ if __name__ == '__main__':
     # rain = rain-rain['obs']
     fig_name = 'rain_'+month + "_"+time_flag
     dr = Draw(fig_name, time_flag)
-    dr.draw_main(rain)
+    dr.draw_main(rain) '''
+## --------------------------------------------
 
 
 
+## --------------------------------------------
     ## 测试逐小时降水画
     # rain = tr.rain_hourly()
     # rain = rain-rain['obs']
@@ -311,3 +344,4 @@ if __name__ == '__main__':
 
     #     dr = Draw(fig_name, time_flag)
     #     dr.draw_main(rain_hour)
+## --------------------------------------------
