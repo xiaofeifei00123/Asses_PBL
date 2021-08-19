@@ -2,11 +2,11 @@
 # -*- encoding: utf-8 -*-
 '''
 Description:
-画时间序列图, 各区域降水量24小时的变化
 逐日降水的时间变化曲线
-这里的时间是从前一天的
+1. 这里的时间是从当天的08时到第二天的08时(BJT), 也就是世界时(00-23)
 
-24小时降水变化曲线(平均)
+2. 24小时降水变化曲线(平均), 各站点分开
+3. 多站点求平均，上面两张图应该都要有
 站点降水的时间序列
 -----------------------------------------
 Time             :2021/06/04 14:32:20
@@ -15,20 +15,12 @@ Version          :1.0
 '''
 
 # %%
-# from re import T
 import xarray as xr
 from read_data import TransferData, GetData
-# import meteva.method as mem
-# import meteva.base as meb
 import numpy as np
 import pandas as pd
 
-# import salem  # 过滤高原外的数据
-# import geopandas
-
 import matplotlib.pyplot as plt
-# import matplotlib.ticker as mticker
-# from matplotlib.pyplot import savefig
 from cycler import cycler
 
 from global_variable import station_dic
@@ -43,9 +35,20 @@ month = 'Jul'
 gd = GetData(month)
 rain = gd.get_rain_hourly()
 
-time_flag = 'all'
-rain = rain.resample(time='D').sum()   # 日降水时间序列
+def get_rain24h(rain):
+    rain_list = []
+    ttime_index = pd.date_range(start='20160701 00', end='20160701 23', freq='H')
+    for i in range(24):
+        time_index = rain.time.sel(time=datetime.time(int(i)))  
+        rain_hour = rain.sel(time=time_index).mean(dim='time')
+        rain_list.append(rain_hour)
+    # rain_24h = xr.concat(rain_list, pd.Index(np.arange(24), name='time'))
+    rain_24h = xr.concat(rain_list, pd.Index(ttime_index, name='time'))
+    return rain_24h
 
+rain = get_rain24h(rain)  # 各测站单独的降水
+
+# %%
 
 def get_station_mean(rain):
     """获得多个站点的平均值
@@ -62,10 +65,13 @@ def get_station_mean(rain):
     rain_24h_mean = rain_station_array.mean(dim='station')  # 多站的平均值
     return rain_24h_mean
 
-rain_mean = get_station_mean(rain)
+rain_24h_mean = get_station_mean(rain)
+    
 
+# cc
 # %%
-rain_mean
+# rain_hour
+rain_24h_mean
 
 ## 这样就能做到数据处理和画图按顺序进行了吗
 # %%
@@ -76,18 +82,19 @@ class Draw():
         self.fontsize = 10
         self.month = month
         self.path = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/picture/'   # 这里要改
+        self.module_list = ['obs', 'ACM2','YSU', 'QNSE', 'QNSE_EDMF', 'TEMF']
 
     def draw_time_sequence(self,ax, dic):
 
         QNSE = dic['QNSE']
         x_label = QNSE.coords['time']
         # x_label = str(x_label.dt.strftime('%d%H').values).split()
-        x_label = x_label.dt.strftime('%d')
+        x_label = x_label.dt.strftime('%H')
 
 
         # x_label = x_label.dt.strftime("%H")  # 转换时间维字符串格式
         # y = QNSE.values
-        module_list = ['obs', 'ACM2','YSU', 'QNSE', 'QNSE_EDMF', 'TEMF']
+        # module_list = ['obs', 'ACM2','YSU', 'QNSE', 'QNSE_EDMF', 'TEMF']
         # x = np.arange(len(x_label))
         # print(x)
 
@@ -105,7 +112,7 @@ class Draw():
         
         j = 0
         ax.set_prop_cycle(custom_cycler)
-        for i in module_list:
+        for i in self.module_list:
             # y = dr.loc[i,:].values
             y = dic[i].values
             y = np.around(y,2)
@@ -178,12 +185,13 @@ class Draw():
 
         for i,j in zip(range(9),dic):
             self.draw_time_sequence(axes[i], dic[j])
-            axes[i].set_ylim(0.0, 40.0)
-            axes[i].set_yticks(np.arange(0, 40.1, 5.0))
+            axes[i].set_ylim(0.0, 1)
+            # axes[i].set_yticks(np.arange(0, 40.1, 5.0))
+            axes[i].set_yticks(np.arange(0, 1.1, 0.1))
             
         axes[7].legend(ncol=3 ,bbox_to_anchor=(0.5,-0.55) ,loc='lower center',fontsize=self.fontsize*2.0, edgecolor='white')
         # flnm = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/rain_staion1_'+self.month+'.png'   # 这里要改
-        flnm = self.path+'rain_staion_'+self.month+'.png'   # 这里要改
+        flnm = self.path+'rain_staion_24h'+self.month+'.png'   # 这里要改
         fig.savefig(flnm)
 
     def draw_single(self, rain):
@@ -196,18 +204,19 @@ class Draw():
         ax = fig.add_axes([0.12, 0.25, 0.8, 0.7])
 
         self.draw_time_sequence(ax, rain)
-        ax.set_yticks(np.arange(0, 41, 5))
+        ax.set_yticks(np.arange(0, 1.1, 0.1))
             
         ax.legend(ncol=3 ,bbox_to_anchor=(0.5,-0.31) ,loc='lower center',fontsize=self.fontsize*2.0, edgecolor='white')
         # # flnm = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/rain_staion1_'+self.month+'.png'   # 这里要改
-        flnm = self.path+'rain_staion_mean_'+self.month+'.png'   # 这里要改
+        flnm = self.path+'rain_staion_24h_station_mean'+self.month+'.png'   # 这里要改
         # fig.suptitle('The mean time sequence', fontsize=self.fontsize*2.0)
         fig.savefig(flnm)
 
 
+
 Dr = Draw(month)
 # Dr.combine_fig(rain)
-Dr.draw_single(rain_mean)
+Dr.draw_single(rain_24h_mean)
 plt.show()
 
 

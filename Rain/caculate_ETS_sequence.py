@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import savefig
 # get_data = Get_data('night')
 
-# from read_data import Return_data  as rd
+from read_data import Return_data  as rd
 from read_data import GetData, TransferData
 # from read_data  import get_rain_total, get_rain_times, get_rain_daily
 
