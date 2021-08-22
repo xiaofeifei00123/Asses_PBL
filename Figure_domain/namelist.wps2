@@ -1,0 +1,54 @@
+&share
+ wrf_core = 'ARW',
+ max_dom = 2,
+ start_date = '2014-08-18_12:00:00','2014-08-18_12:00:00',
+ end_date   = '2014-08-20_00:00:00','2014-08-20_00:00:00',
+ interval_seconds = 21600
+ io_form_geogrid = 2,
+/
+
+&geogrid
+ parent_id         =   1,   1,   2,   3,
+ parent_grid_ratio =   1,   5,   5,   5,
+ i_parent_start    =   1,  84,  29,  52,
+ j_parent_start    =   1,  53,  30,  49,
+ e_we              = 311, 831, 131, 161,
+ e_sn              = 223, 531, 131, 161,
+ !
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT NOTE !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ ! The default datasets used to produce the HGT_M, GREENFRAC, 
+ ! and LU_INDEX/LANDUSEF fields have changed in WPS v3.8. The HGT_M field
+ ! is now interpolated from 30-arc-second USGS GMTED2010, the GREENFRAC 
+ ! field is interpolated from MODIS FPAR, and the LU_INDEX/LANDUSEF fields 
+ ! are interpolated from 21-class MODIS.
+ !
+ ! To match the output given by the default namelist.wps in WPS v3.7.1, 
+ ! the following setting for geog_data_res may be used:
+ !
+ ! geog_data_res = 'gtopo_10m+usgs_10m+nesdis_greenfrac+10m','gtopo_2m+usgs_2m+nesdis_greenfrac+2m',
+ !
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT NOTE !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !
+ geog_data_res = 'modis_lakes+2m',  'modis_lakes+30s',  'modis_lakes+30s',  'modis_lakes+30s',
+ dx = 25000,
+ dy = 25000,
+ map_proj = 'lambert',
+ ref_lat   =  36.0,
+ ref_lon   =  85.0,
+ truelat1  =  30.0,
+ truelat2  =  60.0,
+ stand_lon =  90.0,
+ geog_data_path = '/gpfsnewdata/zhangfm/WPS_geog/geog/geog'
+/
+
+&ungrib
+ out_format = 'WPS',
+ prefix = 'FILE',
+/
+
+&metgrid
+ fg_name = 'FILE'
+ io_form_metgrid = 2, 
+ opt_output_from_metgrid_path='/gpfsnewdata/zhangfm/TPV_simulation/Fengx/Metdata/201408_FNL2'
+/
+
