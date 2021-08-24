@@ -29,7 +29,7 @@ from wrf import getvar, vinterp, interplevel
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import cmaps
-from get_cmap import get_cmap_temp, get_cmap_q
+from global_cmap import get_cmap_temp, get_cmap_q
 import datetime
 from data_process import TransferData
 

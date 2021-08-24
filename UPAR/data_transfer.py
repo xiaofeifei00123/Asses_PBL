@@ -22,6 +22,7 @@ Author           :Forxd
 Version          :0.3
 '''
 
+# %%
 import xarray as xr
 import os
 import numpy as np
@@ -30,10 +31,12 @@ import pandas as pd
 import datetime
 import time
 
+## 这里是Rain目录下的read_data
 import sys
 sys.path.append('/mnt/zfm_18T/fengxiang/Asses_PBL/Rain')  # 调用Rain目录下文件的读程序
-from read_data import TransferData as rain_tr
+from read_data import TransferData as rain_tr   
 from read_data import GetData as rain_gd
+##################
 
 # from netCDF4 import Dataset
 # from wrf import getvar, vinterp, interplevel
@@ -46,6 +49,7 @@ from read_data import GetData as rain_gd
 # from metpy.calc import relative_humidity_from_dewpoint
 from global_variable import station_dic
 
+# %%
 class TransferMain():
     """这里父类就充当一个写公共属性和变量的类
     """
@@ -172,6 +176,7 @@ class TransferData(TransferMain):
     def get_data_one(self):
         """获取单个原始变量的值, 比如temp各试验+观测的值
             这里没有进行nan值的丢弃
+            所有数据都有的情况
         """
         ## 获取站点数据
         da_wrfout = xr.open_dataset(self.path_wrfout)[self.station['name']]
@@ -184,6 +189,8 @@ class TransferData(TransferMain):
             da_list = [da_wrfout, da_micaps, da_fnl]
 
         ## 取时间交集, 初步筛选时间, 这里是将矩阵时间不一致的给灭了
+        ## 有时候需要保持所有时次的数据, 原始数据尽可能保留, 怎么区分
+        ## 按照下不下雨，还不如挑选几次典型个例, 不然什么也不知道啊
         # time_index = ds_gps.time.values
         time_index = da_micaps.time.values
         for da in da_list:
@@ -210,7 +217,7 @@ class TransferData(TransferMain):
         return ds_return   # 返回DataSet
 
     def transfer_data(self, condition):
-        """传递数据
+        """传递有降水时次的站点数据
         """
         tp = TimeProcess(self.station, self.month, self.time_hour)
         # time_index_rain = tp.get_time_index_upar(condition)  # 最后的既有降水, 观测和模式共有数据的时间
@@ -242,19 +249,59 @@ class TransferData(TransferMain):
             return None
 
         
+    def get_data_all(self):
+        """
+        没有对数据进行时间上的筛选
+        将所有有的数据统统聚合到一块
+        获取单个原始变量的值, 比如temp各试验+观测的值
+        这里没有进行nan值的丢弃
+        """
+        ## 获取站点数据
+        da_wrfout = xr.open_dataset(self.path_wrfout)[self.station['name']]
+        da_micaps = xr.open_dataset(self.path_micaps)[self.station['name']]
+        da_fnl = xr.open_dataset(self.path_fnl)[self.station['name']]
+        print(da_wrfout)
+
+        dds = xr.concat([da_micaps, da_fnl], 
+                        pd.Index(['micaps', 'fnl'], name='model'))
+        ds_return = xr.concat([da_wrfout, dds], dim='model')
+        ds_return = ds_return.to_dataset(dim='model')
+
+        
+        if self.month == 'Jul':
+            time_select = '2016-07'
+        elif self.month == 'May':
+            time_select = '2016-05'
+        else:
+            time_select = None
+            print("输入的月份有误")
+
+        ds_return = ds_return.sel(time=time_select)  # 筛选出7月的数据
+        return ds_return   # 返回DataSet
 
 
 
-if __name__ == '__main__':
-    pass
-    ## 申扎站7月弃用
-    # %%
-    month = 'Jul'
-    station = station_dic['LaSa']
-    time_hour = '12'
-    
-    # %%
-    tr = TransferData(station, month, time_hour, 'wind_s')
-    bb = tr.transfer_data('all')
-    print(bb)
+month = 'Jul'
+station = station_dic['LaSa']
+time_hour = '12'
+
+tr = TransferData(station, month, time_hour, 'wind_s')
+bb = tr.get_data_all()
+# # print(bb)
+# %%
+bb['YSU'].sel(variable='wind_s').max()
+# # bb.sel(variable='wind_s')
+# if month == 'Jul':
+#     time_select = '2016-07'
+# elif month == 'May':
+#     time_select = '2016-05'
+# else:
+#     time_select = None
+#     print("输入的月份有误")
+
+# cc = bb.sel(time=time_select)  # 筛选出7月的数据
+# # %%
+# # cc['ACM2'].sel(variable='wind_s').mean(dim='time')
+# # cc.time[0]
+# cc
     

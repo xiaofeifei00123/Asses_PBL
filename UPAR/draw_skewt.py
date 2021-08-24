@@ -9,6 +9,7 @@ Author           :Forxd
 Version          :2.0
 '''
 
+# %%
 import os
 from threading import Condition
 import numpy as np
@@ -25,6 +26,35 @@ from data_transfer import TransferData
 from global_variable import station_dic
 
 
+
+# %%
+station = station_dic['LaSa']
+# station = station_dic['GeErmu']
+month = 'Jul'
+# condition = 'rain'
+condition = 'all'
+time_select = '12'
+tr1 = TransferData(station, month, time_select, 'q')
+ds_q = tr1.transfer_data(condition)
+print(ds_q)
+
+# %%
+ds_q.values
+
+
+
+
+
+# %%
+tr2 = TransferData(station, month, time_select, 'theta_v')
+ds_theta_v = tr2.transfer_data(condition)
+
+tr3 = TransferData(station, month, time_select, 'wind_s')
+ds_wind_s = tr3.transfer_data(condition)
+print(ds_wind_s)
+
+
+# %%
 class Draw_skewt():
 
     def __init__(self, station, month):
@@ -232,29 +262,6 @@ class Draw_skewt():
             #     title,
             # )
 
-if __name__ == '__main__':
-
-    ## 测试
-
-    # %%
-    pass
-    station = station_dic['LaSa']
-    # station = station_dic['GeErmu']
-    # month = 'Jul'
-    month = 'May'
-    # condition = 'rain'
-    condition = 'all'
-    time_select = '00'
-    tr1 = TransferData(station, month, time_select, 'q')
-    ds_q = tr1.transfer_data(condition)
-
-    tr2 = TransferData(station, month, time_select, 'theta_v')
-    ds_theta_v = tr2.transfer_data(condition)
-
-    tr3 = TransferData(station, month, time_select, 'wind_s')
-    ds_wind_s = tr3.transfer_data(condition)
-    print(ds_wind_s)
-    # %%
 
     # if not model_dic_q is None:
     # # if model_dic_q:
