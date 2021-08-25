@@ -9,7 +9,11 @@ Time             :2021/06/15 17:21:14
 Author           :Forxd
 Version          :1.0
 '''
+# %%
 
+import sys,os
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_PATH)
 # from pandas.core import frame
 # from shapely.ops import transform
 # import xarray as xr
@@ -21,7 +25,7 @@ import os
 
 # from datetime import datetime
 # import datetime as Datetime
-
+# 
 import salem
 import cartopy.crs as ccrs
 import cartopy.feature as cfeat
@@ -36,28 +40,41 @@ import matplotlib.pyplot as plt
 import geopandas
 # import cmaps
 # import meteva.base as mb
-
 from read_data import TransferData
 from read_data import GetData
-from get_cmap import get_cmap_rain
-
+from get_cmap import get_cmap_rain2
 from global_variable import station_dic
 
 
+# %%
+######################################
+## 测试单个图的
+######################################
+# area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
+# month = 'Jul'
+# time_flag = 'all'
+# gd = GetData(month)
+# rain = gd.get_rain_hourly()
+# tr = TransferData(ds=rain, area=area, time_flag=time_flag)
+# rain = tr.rain_time_total()
 
+
+# %%
 
 class Draw(object):
 
-    def __init__(self, fig_name, flag) -> None:
+    def __init__(self, fig_name, flag, levels) -> None:
         self.fig_name = fig_name
         self.flag = flag
+        self.levels = levels
         ## 所有路径推荐使用绝对路径
         self.path_province = '/mnt/zfm_18T/fengxiang/DATA/SHP/Map/cn_shp/Province_9/Province_9.shp'
         self.path_tibet = '/mnt/zfm_18T/fengxiang/DATA/SHP/shp_tp/Tibet.shp'
         self.picture_path = '/mnt/zfm_18T/fengxiang/Asses_PBL/Rain/picture'
 
-        self.levels = [10, 25,  50, 75, 100, 200,
-                       250, 300, 400, 600, 800, 1000,]
+
+        # self.levels = [10, 25,  50, 75, 100, 200,
+        #                250, 300, 400, 600, 800, 1000,]
         # self.levels = [1, 5, 10, 25, 50, 100, 200,
         #                250, 300, 400, 600, 800, 1000,]
         # self.levels = [0.1, 0.5, 1, 2.5, 5.0, 10.0, 20.0,
@@ -224,7 +241,7 @@ class Draw(object):
         axes[4] = fig.add_subplot(grid[2, 0:1], projection=proj)
         axes[5] = fig.add_subplot(grid[2, 1:2], projection=proj)
 
-        cmap = get_cmap_rain()
+        cmap = get_cmap_rain2()
 
         time_2005 = '2800_2906 Jul 2005'
         time_2014 = '1900_2000 Aug 2014'
@@ -253,50 +270,70 @@ class Draw(object):
         )
         path = os.path.join(self.picture_path, self.fig_name)
         fig.savefig(path)
-def draw_hourly():
-    """每个小时的降水画一张图
-    """
-    time_flag = 'all'
-    area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
-    gd = GetData()
-    rain = gd.get_rain_hourly()
-    tr = TransferData(ds=rain, area=area, time_flag=time_flag)
-    rain = tr.rain_hourly()
-    fl_time = rain.time
 
-    for i in fl_time:
-        rain_hour = rain.sel(time=i)
-        flnm_time = str(i.dt.strftime('%Y%m_%d%H').values)
-        fig_name = 'rain_'+flnm_time
-        dr = Draw(fig_name, time_flag)
-        dr.draw_main(rain_hour)
 
-def draw_dual():
-    # 一次画多个需要的图
-    time_flag = 'night'
-    area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
-    # month = 'Jul'
-    month = 'May'
 
-    month_list = ['May', 'Jul']
-    time_list = ['all', 'day', 'night']
-    for month in month_list:
-        for time_flag in time_list:
+######################################
+## 测试一个图的
+# levels = [10, 25,  50, 75, 100, 200, 250, 300, 400, 600, 800, 1000,]
+# levels = [10, 25,  50, 75, 100, 125, 150, 175, 200, 250, 300, 500,]
+# levels = [10, 50, 100, 150, 200, 225, 250, 275, 300,325, 350, 500]
+# levels = [10, 40, 70, 100, 130, 160, 190, 220, 250, 300, 500,]
 
-            gd = GetData(month)
-            rain = gd.get_rain_hourly()
+# # rain = rain-rain['obs']
+# fig_name = 'rain_'+month + "_"+time_flag
+# print("画  %s" %fig_name)
+# dr = Draw(fig_name, time_flag, levels=levels)
+# dr.draw_main(rain)
+######################################
 
-            # %%
-            tr = TransferData(ds=rain, area=area, time_flag=time_flag)
-            rain = tr.rain_time_total()
-            # rain = rain-rain['obs']
-            fig_name = 'rain_'+month + "_"+time_flag
-            print("画  %s" %fig_name)
-            dr = Draw(fig_name, time_flag)
-            dr.draw_main(rain)
 
+
+
+# %%
 
 if __name__ == '__main__':
+    def draw_hourly():
+        """每个小时的降水画一张图
+        """
+        time_flag = 'all'
+        area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
+        month = 'Jul'
+        gd = GetData(month)
+        rain = gd.get_rain_hourly()
+        tr = TransferData(ds=rain, area=area, time_flag=time_flag)
+        rain = tr.rain_hourly()
+        fl_time = rain.time
+
+        for i in fl_time:
+            rain_hour = rain.sel(time=i)
+            flnm_time = str(i.dt.strftime('%Y%m_%d%H').values)
+            fig_name = 'rain_'+flnm_time
+            dr = Draw(fig_name, time_flag)
+            dr.draw_main(rain_hour)
+
+    def draw_dual():
+        # 一次画多个需要的图
+        time_flag = 'night'
+        area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
+        # levels = [10, 50, 100, 150, 200, 225, 250, 275, 300,325, 350, 500]
+        levels = [10, 40, 70, 100, 130, 160, 190, 220, 250, 300, 500,]
+        month_list = ['May', 'Jul']
+        time_list = ['all', 'day', 'night']
+        for month in month_list:
+            for time_flag in time_list:
+
+                gd = GetData(month)
+                rain = gd.get_rain_hourly()
+
+                # %%
+                tr = TransferData(ds=rain, area=area, time_flag=time_flag)
+                rain = tr.rain_time_total()
+                # rain = rain-rain['obs']
+                fig_name = 'rain_'+month + "_"+time_flag
+                print("画  %s" %fig_name)
+                dr = Draw(fig_name, time_flag, levels)
+                dr.draw_main(rain)
 
     draw_dual()
 

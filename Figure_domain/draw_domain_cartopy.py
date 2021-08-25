@@ -10,6 +10,7 @@ Version          :1.0
 '''
 
 # %%
+from shapely.ops import transform
 import xarray as xr
 import numpy as np
 import salem
@@ -27,9 +28,13 @@ import cmaps
 
 from matplotlib.path import Path
 import matplotlib.patches as patches
+import matplotlib as mpl
 
 # from global_variable import station_dic
-from global_station import station_dic
+# from global_station import station_dic
+# import sys
+# sys.path.append("..")
+from global_variable import station_dic
 
 
 def draw_screen_poly(lats, lons):
@@ -120,7 +125,7 @@ def create_map(info):
                   crs=proj_lambert)
     # print(false_northing)
     # print(false_easting)
-    return ax
+    return [ax,fig]
 
 
 def get_information(flnm):
@@ -221,72 +226,9 @@ def draw_d02(info):
 def draw_station():
     """画站点
     """
-    # station = {
-    #     # 'TR': {
-    #     #     'lat': 28.6,
-    #     #     'lon': 87.0
-    #     # },
-    #     'NQ': {
-    #         'lat': 31.4,
-    #         'lon': 92.0
-    #     },
-    #     'LS': {
-    #         'lat': 29.6,
-    #         'lon': 91.1
-    #     },
-    #     'TTH': {
-    #         'lat': 34.2,
-    #         'lon': 92.4
-    #     },
-    #     'GZ': {
-    #         'lat': 32.3,
-    #         'lon': 84.0
-    #     },
-    #     'SZ': {
-    #         'lat': 30.9,
-    #         'lon': 88.7
-    #     },
-    #     'SQH': {
-    #         'lat': 32.4,
-    #         'lon': 80.1
-    #     },
-    #     # 'JinChuan': {
-    #     #     'lat': 31.29,
-    #     #     'lon': 102.04
-    #     # },
-    #     # 'JinLong': {
-    #     #     'lat': 29.00,
-    #     #     'lon': 101.50
-    #     # },
-    #     'TR': {
-    #         'lat': 28.63,
-    #         'lon': 87.08,
-    #         'name': 'TingRi',
-    #         'number': '55664',
-    #         'height': 4302
-    #     },
-    #     'LZ': {
-    #         'lat': 29.65,
-    #         'lon': 94.36,
-    #         'name': 'LinZhi',
-    #         'number': '56312',
-    #         'height':2991.8 
-    #     },
-    #     'CD': {
-    #         'lat': 31.15,
-    #         'lon': 97.17,
-    #         'name': 'ChangDu',
-    #         'number': '56137',
-    #         'height': 3315
-    #     },
-    # }
     station = station_dic
     values = station.values()
-    # station_name = list(station.keys())
-    # station_name = list(station.values()['abbreviation'])
     station_name = []
-    # print(type(station_name[0]))
-    # print(station_name[0])
     x = []
     y = []
     for i in values:
@@ -334,16 +276,71 @@ def draw_station():
                  'size': 14,
              })
 
+def draw_landuse(ax):
+    pass
+    flnm = '/mnt/zfm_18T/fengxiang/DATA/LANDUSE/geo_em.d01.nc'
+    ds = xr.open_dataset(flnm)
+    land = ds['LU_INDEX'].squeeze().values
+    # ax.contourf()
+    x = ds['XLONG_M'].squeeze().values
+    y = ds['XLAT_M'].squeeze().values
+    cmap = cmaps.vegetation_modis
+    levels = np.arange(0,22)
+    print(levels)
+    # norm = mpl.colors.BoundaryNorm(levels, cmap.N, extend='both')
+    # norm = mpl.colors.BoundaryNorm(levels, cmap.N)
+    # print(x)
+    # ax.contourf(x,y, land, transform=ccrs.PlateCarree())
+
+    
+    flnm_tibet = '/mnt/zfm_18T/fengxiang/DATA/SHP/shp_tp/Tibet.shp'
+    shp = geopandas.read_file(flnm_tibet)
+    
+    # self.draw_contourf(rain['ACM2'].salem.roi(
+    #     shape=shp), axes[0], cmap, ['ACM2', '(a)', time_2005])
+    
+    # land_salem = land.salem.roi(shape=shp)
+    crx = ax.contourf(x,
+                      y,
+                      land,
+                      cmap=cmap,
+                    #   norm=norm,
+                      # extend='both',
+
+                      # extend='max',
+                      #   levels=levels,
+                      levels=levels,
+                      transform=ccrs.PlateCarree())
+
+    return crx
+
 
 if __name__ == '__main__':
     file_folder = "./"
     file_name = "namelist.wps"
     flnm = file_folder + file_name
-
     info = get_information(flnm)  # 获取namelist.wps文件信息
-    ax = create_map(info)  # 在domain1区域内，添加地理信息，创建底图
+    res = create_map(info)  # 在domain1区域内，添加地理信息，创建底图
+    ax = res[0]
+    fig = res[1]
     draw_d02(info)  # 绘制domain2区域
+    cf = draw_landuse(ax)
+    plt.colorbar(cf, fraction=0.1, pad=0.1, location='bottom', orientation='horizontal')
+    # ax.colorbar()
+    # ax6 = fig.add_axes([0.18, 0.06, 0.7, 0.02], transform=ccrs.PlateCarree())  # 重新生成一个新的坐标图
+    # print("创建正常")
+
+    # levels = np.arange(1,22)
+    # cb = fig.colorbar(
+    #     cf,
+    #     cax=ax6,
+    #     orientation='horizontal',
+    #     ticks=levels,
+    #     # fraction = 0.1,  # 色标大小
+    #     pad=0.1,  #
+    # )
+    
     draw_station()  # 将站点位置绘制到图上
     # plt.title('d01', loc='left')
     # plt.savefig("domain.tiff")
-    plt.savefig("domain.png")
+    plt.savefig("domain_land.png")

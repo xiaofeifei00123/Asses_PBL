@@ -175,13 +175,14 @@ class SaveData():
             ds_var[var] = da_model
 
         # time_index = reduce(np.intersect1d,
-        time_index_temp = ds_var['temp'].sel(model='TEMF').dropna(dim='time', how='all').time.values 
-        time_index_td = ds_var['td'].sel(model='TEMF').dropna(dim='time', how='all').time.values 
-        time_index_wind_s = ds_var['wind_s'].sel(model='TEMF').dropna(dim='time', how='all').time.values 
+        # time_index_temp = ds_var['temp'].sel(model='TEMF').dropna(dim='time', how='all').time.values 
+        # time_index_td = ds_var['td'].sel(model='TEMF').dropna(dim='time', how='all').time.values 
+        # time_index_wind_s = ds_var['wind_s'].sel(model='TEMF').dropna(dim='time', how='all').time.values 
 
-        time_index1 = np.intersect1d(time_index_temp, time_index_td)
-        time_index = np.intersect1d(time_index1, time_index_wind_s)
-        ds_return = ds_var.sel(time=time_index)
+        # time_index1 = np.intersect1d(time_index_temp, time_index_td)
+        # time_index = np.intersect1d(time_index1, time_index_wind_s)
+        # ds_return = ds_var.sel(time=time_index)
+        ds_return = ds_var
         return ds_return
 
     def save_station_nc(self, month):
@@ -204,7 +205,8 @@ class SaveData():
 
 if __name__ == '__main__':
     
-    for month in ['May', 'Jul']:
+    # for month in ['May', 'Jul']:
+    for month in ['Jul']:
         sd = SaveData()
         sd.save_station_nc(month)
     

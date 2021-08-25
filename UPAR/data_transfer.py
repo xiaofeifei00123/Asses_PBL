@@ -260,7 +260,7 @@ class TransferData(TransferMain):
         da_wrfout = xr.open_dataset(self.path_wrfout)[self.station['name']]
         da_micaps = xr.open_dataset(self.path_micaps)[self.station['name']]
         da_fnl = xr.open_dataset(self.path_fnl)[self.station['name']]
-        print(da_wrfout)
+        print(da_micaps)
 
         dds = xr.concat([da_micaps, da_fnl], 
                         pd.Index(['micaps', 'fnl'], name='model'))
@@ -278,30 +278,39 @@ class TransferData(TransferMain):
 
         ds_return = ds_return.sel(time=time_select)  # 筛选出7月的数据
         return ds_return   # 返回DataSet
+        # return da_micaps
 
 
 
-month = 'Jul'
-station = station_dic['LaSa']
-time_hour = '12'
-
-tr = TransferData(station, month, time_hour, 'wind_s')
-bb = tr.get_data_all()
-# # print(bb)
 # %%
-bb['YSU'].sel(variable='wind_s').max()
-# # bb.sel(variable='wind_s')
-# if month == 'Jul':
-#     time_select = '2016-07'
-# elif month == 'May':
-#     time_select = '2016-05'
-# else:
-#     time_select = None
-#     print("输入的月份有误")
 
-# cc = bb.sel(time=time_select)  # 筛选出7月的数据
-# # %%
-# # cc['ACM2'].sel(variable='wind_s').mean(dim='time')
-# # cc.time[0]
-# cc
-    
+if __name__ == '__main__':
+    month = 'Jul'
+    station = station_dic['GaiZe']
+    time_hour = '12'
+
+    tr = TransferData(station, month, time_hour, 'wind_s')
+    bb = tr.get_data_all()
+    # # print(bb)
+    # %%
+    aa = bb['micaps'].sel(variable='q')
+    aa.sel(pressure=570)
+    # cc = bb.sel(time='2016-07')
+    # cca = cc.sel(variable='wind_s')
+    # cca
+    # bb['YSU'].sel(variable='wind_s').max()
+    # # bb.sel(variable='wind_s')
+    # if month == 'Jul':
+    #     time_select = '2016-07'
+    # elif month == 'May':
+    #     time_select = '2016-05'
+    # else:
+    #     time_select = None
+    #     print("输入的月份有误")
+
+    # cc = bb.sel(time=time_select)  # 筛选出7月的数据
+    # # %%
+    # # cc['ACM2'].sel(variable='wind_s').mean(dim='time')
+    # # cc.time[0]
+    # cc
+        

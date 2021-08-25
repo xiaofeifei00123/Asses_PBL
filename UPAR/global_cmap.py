@@ -1,10 +1,13 @@
 
+# %%
 import matplotlib as mpl
 import cmaps
 import numpy as np
 import meteva.base as mb
 import matplotlib.pyplot as plt
 
+
+# %%
 def get_cmap_rain():
     ccc = cmaps.precip3_16lev_r
     ccc,clev = mb.def_cmap_clevs(mb.cmaps.rain_1h)
@@ -113,19 +116,31 @@ def get_cmap_temp():
     cmap = cccc
     return cmap
 
+def get_cmap_landuse():
+    pass
+    # cccc = mpl.colors.ListedColormap([
+    #             ('#FF0000'),   
+    #             ('#FF4500'),   
+    #             ('#FF8C00'),   
+    # ])
+    # cmap = cccc
+    cmap = cmaps.vegetation_modis
+    return cmap
+
 def draw():
     fig, ax = plt.subplots(figsize=(6, 1))
     fig.subplots_adjust(bottom=0.5)
     # cmap = get_cmap_rain()
     # cmap = get_cmap_rain()
-    cmap = get_cmap_q()
+    # cmap = get_cmap_q()
+    cmap = get_cmap_landuse()
     # norm = mpl.colors.Normalize(vmin=5, vmax=10)
     fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap),
              cax=ax, orientation='horizontal', label='Some Units')
     fig.savefig('test')
 
-if __name__ == '__main__':
         
     # aa = get_cmap_rain()
     # print(aa)
-    draw()
+draw()
+# %%

@@ -9,39 +9,71 @@ Author           :Forxd
 Version          :1.0
 '''
 
+# %%
 import os
 import sys
 import matplotlib as mpl
 import cmaps
 import numpy as np
-import meteva.base as mb
+import meteva.base as mb   # 气象中心搞的一个计算降水评分的库
 import matplotlib.pyplot as plt
 
 
+# %%
 def get_cmap_rain():
     ccc = cmaps.precip3_16lev_r
-    ccc, clev = mb.def_cmap_clevs(mb.cmaps.rain_1h)
+    # ccc, clev = mb.def_cmap_clevs(mb.cmaps.rain_1h)
+    ccc, clev = mb.def_cmap_clevs(mb.cmaps.rain_24h)
     colors = mpl.cm.get_cmap(ccc)
     col = colors(np.linspace(0, 1, 18))
     cccc = mpl.colors.ListedColormap([
         'white',
         (165/250, 243 / 250, 141 / 250),  # RGB withn 0-1 range
-        (153/250, 210 / 250, 202 / 250),  # RGB withn 0-1 range
-        (155/250, 188 / 250, 232 / 250),  # RGB withn 0-1 range
-        (107/250, 157 / 250, 225 / 250),  # RGB withn 0-1 range
-        (59/250, 126 / 250, 219 / 250),  # RGB withn 0-1 range
-        (43/250, 92 / 250, 194 / 250),  # RGB withn 0-1 range
-        (28/250, 59 / 250, 169 / 250),  # RGB withn 0-1 range
-        (17/250, 44 / 250, 144 / 250),  # RGB withn 0-1 range
-        (7/250, 30 / 250, 120 / 250),  # RGB withn 0-1 range
-        (70/250, 25 / 250, 129 / 250),  # RGB withn 0-1 range
-        (134/250, 21 / 250, 139 / 250),  # RGB withn 0-1 range
-        (200/250, 17 / 250, 169 / 250),  # RGB withn 0-1 range
-        (129/250, 0 / 250, 64 / 250),  # RGB withn 0-1 range
+        (153/250, 210 / 250, 202 / 250),  
+        (155/250, 188 / 250, 232 / 250),  
+        (107/250, 157 / 250, 225 / 250),  
+        (59/250, 126 / 250, 219 / 250),  
+        (43/250, 92 / 250, 194 / 250),  
+        (28/250, 59 / 250, 169 / 250),  
+        (17/250, 44 / 250, 144 / 250),  
+        (7/250, 30 / 250, 120 / 250),  
+        (70/250, 25 / 250, 129 / 250),  
+        (134/250, 21 / 250, 139 / 250),  
+        (200/250, 17 / 250, 169 / 250),  
+        (129/250, 0 / 250, 64 / 250),  
     ])
     cmap = cccc
+    # cmap = ccc
+    # cmap = colors
     return cmap
 
+def get_cmap_rain2():
+    cccc = mpl.colors.ListedColormap([
+        'white',
+        # '#d9f2d9',
+        # '#7FFF00',
+        # '#00FF00',  # 最亮的绿色
+        # (165/250, 243 / 250, 141 / 250),  # RGB withn 0-1 range
+        (141/255, 227/255, 141/255),
+        (80/255, 191/255, 80/255),
+        (43/255, 166/255, 43/255),
+        (10/255, 128/255, 10/255),
+        # (19/255, 196/255, 169/255),
+        (25/255, 122/255, 132/255),
+        (43/250, 92 / 250, 194 / 250),  
+        (28/250, 59 / 250, 169 / 250),  
+        (17/250, 44 / 250, 144 / 250),  
+        (7/250, 30 / 250, 120 / 250),  
+        (70/250, 25 / 250, 129 / 250),  
+        (134/250, 21 / 250, 139 / 250),  
+        (129/250, 0 / 250, 64 / 250),  
+        # (200/250, 17 / 250, 169 / 250),  
+        # (129/250, 0 / 250, 64 / 250),  
+    ])
+    cmap = cccc
+    # cmap = ccc
+    # cmap = colors
+    return cmap
 
 def get_temp():
     cccc = mpl.colors.ListedColormap([
@@ -102,7 +134,19 @@ def get_cmap_temp():
     return cmap
 
 
-def draw():
+def draw_normal():
+    pass
+    fig, ax = plt.subplots(figsize=(6, 1))
+    fig.subplots_adjust(bottom=0.5)
+    cmap = get_cmap_rain2()
+    norm = mpl.colors.Normalize(vmin=0, vmax=10)
+    fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
+             cax=ax, orientation='horizontal', label='Some Units')
+
+
+
+
+def draw_colorbar():
     fig, ax = plt.subplots(figsize=(6, 1))
     fig.subplots_adjust(bottom=0.5)
     cmap, clevel = get_temp()
@@ -117,7 +161,8 @@ def draw():
         boundaries=bounds, ncolors=len(bounds)+1, extend='both')
 
     # print(norm)
-    ticks = [-10, 0, 2,10]
+    # ticks = [-10, 0, 2,10]
+    ticks = [0, ]
     fig.colorbar(
         mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
         # cax=ax,   # 指定colorbar是画在哪个ax内
@@ -127,17 +172,24 @@ def draw():
         ticks=ticks,
         spacing='uniform',
         # fraction=100,
-        # shrink=1.0,
-        aspect=30,  # 长短边比例
-        pad=10  # 离图片的距离
+        fraction=5,
+        shrink=1.0,
+        aspect=10,  # 长短边比例
+        pad=30  # 离图片的距离
         )
     path = sys.path[0]
     fig_name = os.path.join(path, 'cmap_test')
     fig.savefig(fig_name)
+    plt.show()
 
 
-if __name__ == '__main__':
+# draw_colorbar()
+draw_normal()
+
+# %%
+# if __name__ == '__main__':
 
     # aa = get_cmap_rain()
     # print(aa)
-    draw()
+    # draw()
+    # pass

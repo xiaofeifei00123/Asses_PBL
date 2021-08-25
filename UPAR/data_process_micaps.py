@@ -22,6 +22,8 @@ from global_variable import station_dic
 
 from data_process_main import GetData
 
+
+# %%
 class GetMicaps(GetData):
     
     def __init__(self, station_number):
@@ -83,7 +85,7 @@ class GetMicaps(GetData):
 
         for flnm in aa:
             fl_time = '20'+flnm[0:-4]
-            # print(fl_time)
+            print(fl_time)
             tt = pd.to_datetime(fl_time, format='%Y%m%d%H')
             tt = tt - pd.Timedelta(hours=8)
             ## 这时间是不规则的
@@ -99,6 +101,39 @@ class GetMicaps(GetData):
             da_time.append(dda)  # 很多时次都是到595hPa才有值, 气压和高度的对应关系会随着时间发展而变化, 气压坐标和高度坐标不能通用
         da_return = xr.concat(da_time, pd.Index(ttt, name='time'))
         return da_return
+# %%
+
+ds_nc = xr.Dataset()
+station = station_dic['GaiZe']
+# for key in station_dic:
+
+    # print("读取 %s 站的数据"%key)
+station_number = station['number']
+    # print(station_number)
+gd = GetMicaps(station_number=station_number)    
+da = gd.data_micaps()
+
+# %%
+dd = da.sel(time='2016-07')
+dd.sel(variable='wind_s', pressure=570)
+
+# %%
+da = da.transpose(*(...,'pressure'))
+ds = da.to_dataset(dim='variable')
+ds_diagnostic = gd.caculate_diagnostic(ds)
+## 将原来的变量和计算的诊断变量合并为一个DataArray
+ds_return = xr.merge([ds, ds_diagnostic])
+dda = ds_return.to_array()
+## 不同站点的数据组合为一个Dataset
+# ds_nc[key] = dda
+
+# ds_nc.to_netcdf('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')
+# %%
+cc = dda.sel(time='2016-07')
+cc.sel(variable='wind_s', pressure=550)
+
+
+# %%
 
 if __name__ == '__main__':
     pass
