@@ -7,6 +7,7 @@ Description:
 2. 24小时降水变化曲线(平均), 各站点分开
 3. 多站点求平均，上面两张图应该都要有
 站点降水的时间序列
+4. 不同下垫面类型区域的平均降水
 -----------------------------------------
 Time             :2021/06/04 14:32:20
 Author          :Forxd
@@ -21,6 +22,7 @@ import matplotlib.pyplot as plt
 from cycler import cycler
 
 from read_data import TransferData, GetData
+from data_process_landause import get_landmask
 from global_variable import station_dic
 import datetime
 
@@ -31,9 +33,19 @@ area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
 month = 'Jul'
 # month = 'May'
 gd = GetData(month)
-rain = gd.get_rain_hourly()
+rain = gd.get_rain_hourly()  # 原始的小时降水数据
+
+
 
 def get_rain24h(rain):
+    """[summary]
+
+    Args:
+        rain ([type]): [description]
+
+    Returns:
+        rain_24h: (lat:82, lon:142, time:24)
+    """
     rain_list = []
     ttime_index = pd.date_range(start='20160701 00', end='20160701 23', freq='H')
     for i in range(24):
@@ -42,9 +54,62 @@ def get_rain24h(rain):
         rain_list.append(rain_hour)
     # rain_24h = xr.concat(rain_list, pd.Index(np.arange(24), name='time'))
     rain_24h = xr.concat(rain_list, pd.Index(ttime_index, name='time'))
-    return rain_24h
+    return rain_24h  
 
-rain = get_rain24h(rain)  # 各测站单独的降水
+rain_24h = get_rain24h(rain)  # 所有格点的吧
+
+# %%
+# rain_24h['obs'][0].plot()
+# rain
+
+# %%
+
+# %%
+# rain
+def get_rain_land_area():
+    land_mask = get_landmask()
+    rain_land_area_list = []
+
+    land_list = ['grass', 'bare', 'bush']
+
+    for i in land_list:
+        # rain_land[i] = rain_24h*land_mask[i]
+        rain_land_grid = rain_24h*land_mask[i]
+        rain_land_area_list.append(rain_land_grid.mean(dim=['lat','lon']))
+        # rain_land_area[i] = rain_land_grid.mean(dim=['lat','lon'])
+    # rain_land_area['mean'] = rain_24h.mean(dim=['lat', 'lon'])
+    rain_land_area = xr.concat(rain_land_area_list,pd.Index(land_list, name='landuse') )
+        # rain_station_array = xr.concat(rain_station_list, pd.Index(station_list, name='station'))
+    return rain_land_area
+
+# %%
+aa = get_rain_land_area()
+
+# %%
+# aa
+import dask.array as da
+da_ac = aa['ACM2']
+# y = da.from_array(aa, chunks=100)
+# y
+# da_ac
+# da_ac
+y = da.from_array(da_ac, chunks=1)
+
+
+# %%
+aa.sel(landuse='grass')
+# aa['ACM2']
+# cc = xr.Dataset()
+# cc['aa'] = 'aa'
+# cc
+
+
+
+# %%
+
+
+# %%
+# rain_24h
 
 # %%
 
@@ -99,7 +164,6 @@ def get_station_land(rain):
     rain_land_dic['high'] = rain_list[2]
 
     return rain_land_dic
-rain_land_dic = get_station_land(rain)
 
 
 
@@ -254,13 +318,27 @@ Dr = Draw(month)
 # Dr.combine_fig(rain)
 # Dr.draw_single(rain_24h_mean)
 
+# rain_land_dic = get_station_land(rain)  # 站点的数据
 
-title_dic = {'low':'BareLand', 'medium':'Bush', 'high':'GrassLand'}
-Dr.draw_single(rain_24h_mean, 'Mean')
-for i in title_dic:
-    Dr.draw_single(rain_land_dic[i], title_dic[i])
+# title_dic = {'low':'BareLand', 'medium':'Bush', 'high':'GrassLand'}
+# Dr.draw_single(rain_24h_mean, 'Mean')
+# for i in title_dic:
+#     Dr.draw_single(rain_land_dic[i], title_dic[i])
 
-plt.show()
+# plt.show()
+
+
+rain_land_area = get_rain_land_area()
+land_list = ['grass', 'bare', 'bush']
+
+for i in land_list:
+    pass
+    Dr.draw_single(rain_land_area.sel(landuse=i), i+'land')
+Dr.draw_single(rain_land_area.mean(dim='landuse'), 'mean'+'_land')
+    
+
+
+
 
 
 

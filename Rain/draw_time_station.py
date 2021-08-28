@@ -2,12 +2,10 @@
 # -*- encoding: utf-8 -*-
 '''
 Description:
+日降水变化曲线
 画时间序列图, 各区域降水量24小时的变化
 逐日降水的时间变化曲线
 这里的时间是从前一天的
-
-24小时降水变化曲线(平均)
-站点降水的时间序列
 -----------------------------------------
 Time             :2021/06/04 14:32:20
 Author          :Forxd
@@ -170,7 +168,7 @@ class Draw():
         ax.xaxis.set_minor_locator(plt.MultipleLocator(1))
         # ax.set_yticks(np.arange(0, 5.01, 0.1))  # 这个是选择哪几个坐标画上来的了,都有只是显不显示
         ax.yaxis.set_tick_params(labelsize=self.fontsize*1.8)
-        # ax.set_ylim(0,5.1)
+        ax.set_ylim(0,50)
         # ax.set_ylim(0.0,0.6)
         ax.set_xlabel("Time(UTC)", fontsize=self.fontsize*2.0)
         ax.set_ylabel("Precipitation (mm)", fontsize=self.fontsize*2.0)
@@ -239,7 +237,7 @@ class Draw():
         ax = fig.add_axes([0.12, 0.25, 0.8, 0.7])
 
         self.draw_time_sequence(ax, rain)
-        ax.set_yticks(np.arange(0, 41, 5))
+        ax.set_yticks(np.arange(0, 51, 5))
             
         ax.legend(ncol=3 ,bbox_to_anchor=(0.5,-0.31) ,loc='lower center',fontsize=self.fontsize*2.0, edgecolor='white')
         ax.set_title(title, fontsize=22)

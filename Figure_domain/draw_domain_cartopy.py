@@ -45,7 +45,7 @@ def draw_screen_poly(lats, lons):
     '''
     x, y = lons, lats
     xy = list(zip(x, y))
-    print(xy)
+    # print(xy)
     poly = plt.Polygon(xy, edgecolor="black", fc="none", lw=.8, alpha=1)
     plt.gca().add_patch(poly)
 
@@ -65,7 +65,6 @@ def create_map(info):
     false_easting = (info['e_we'][0] - 1) / 2 * info['dx']
     false_northing = (info['e_sn'][0] - 1) / 2 * info['dy']
 
-    # print(true_lat1)
 
     proj_lambert = ccrs.LambertConformal(
         central_longitude=ref_lon,
@@ -78,7 +77,7 @@ def create_map(info):
     # proj = ccrs.PlateCarree(central_longitude=ref_lon)  # 创建坐标系
     proj = ccrs.PlateCarree()  # 创建坐标系
     ## 创建坐标系
-    fig = plt.figure(figsize=(4, 3.4), dpi=300)  # 创建页面
+    fig = plt.figure(figsize=(6.4, 5.7), dpi=400)  # 创建页面
     ax = fig.add_axes([0.12, 0.02, 0.85, 0.95], projection=proj_lambert)
 
     ## 读取青藏高原地形文件
@@ -92,7 +91,11 @@ def create_map(info):
         alpha=1.)
 
     ## 将青藏高原地形文件加到地图中区
-    ax.add_feature(Tibet, linewidth=0.5, zorder=2)
+    # ax.add_feature(Tibet, linewidth=0.5, zorder=2)
+    ax.add_feature(Tibet, linewidth=1.5, zorder=2)
+    # ax.add_feature(cfeat.LAND)
+    ax.add_feature(cfeat.COASTLINE)
+    # ax.add_feature(cfeat.LAKES)
 
     ## --设置网格属性, 不画默认的标签
     gl = ax.gridlines(draw_labels=True,
@@ -114,8 +117,11 @@ def create_map(info):
 
     gl.xformatter = LONGITUDE_FORMATTER  #使横坐标转化为经纬度格式
     gl.yformatter = LATITUDE_FORMATTER
-    gl.xlocator = mticker.FixedLocator(np.arange(75, 105 + 5, 5))
-    gl.ylocator = mticker.FixedLocator(np.arange(20, 50, 5))
+    # gl.xlocator = mticker.FixedLocator(np.arange(75, 105 + 5, 5))
+    # gl.xlocator = mticker.FixedLocator(np.arange(55, 105 + 5, 5))
+    gl.xlocator = mticker.FixedLocator(np.arange(55, 115 + 5, 5))
+    # gl.ylocator = mticker.FixedLocator(np.arange(20, 50, 5))
+    gl.ylocator = mticker.FixedLocator(np.arange(10, 55, 5))
     gl.xlabel_style = {'size': 10}  #修改经纬度字体大小
     gl.ylabel_style = {'size': 10}
     ax.spines['geo'].set_linewidth(0.6)  #调节边框粗细
@@ -220,7 +226,7 @@ def draw_d02(info):
         ## 标注d02
         # plt.text(lon[0] * 1+100000, lat[0] * 1. - 225000, "d02", fontdict={'size':14})
         plt.text(lon[0] * 1+100000, lat[0] * 1.+50000, "d02", fontdict={'size':14})
-        print(lon[3])
+        # print(lon[3])
 
 
 def draw_station():
@@ -245,7 +251,7 @@ def draw_station():
                s=12)
     ## 给站点加注释
     for i in range(len(x)):
-        print(x[i])
+        # print(x[i])
         if station_name[i] == 'LS':
             # x[i] = x[i]
             y[i] = y[i] - 2.0 
@@ -268,8 +274,8 @@ def draw_station():
                      'size': 9,
                  })
 
-    plt.text(62,
-             45,
+    plt.text(45,
+             50,
              'd01',
              transform=ccrs.PlateCarree(),
              fontdict={
@@ -286,7 +292,7 @@ def draw_landuse(ax):
     y = ds['XLAT_M'].squeeze().values
     cmap = cmaps.vegetation_modis
     levels = np.arange(0,22)
-    print(levels)
+    # print(levels)
     # norm = mpl.colors.BoundaryNorm(levels, cmap.N, extend='both')
     # norm = mpl.colors.BoundaryNorm(levels, cmap.N)
     # print(x)
@@ -325,20 +331,11 @@ if __name__ == '__main__':
     fig = res[1]
     draw_d02(info)  # 绘制domain2区域
     cf = draw_landuse(ax)
-    plt.colorbar(cf, fraction=0.1, pad=0.1, location='bottom', orientation='horizontal')
-    # ax.colorbar()
-    # ax6 = fig.add_axes([0.18, 0.06, 0.7, 0.02], transform=ccrs.PlateCarree())  # 重新生成一个新的坐标图
-    # print("创建正常")
-
-    # levels = np.arange(1,22)
-    # cb = fig.colorbar(
-    #     cf,
-    #     cax=ax6,
-    #     orientation='horizontal',
-    #     ticks=levels,
-    #     # fraction = 0.1,  # 色标大小
-    #     pad=0.1,  #
-    # )
+    # plt.colorbar(cf, fraction=0.1, pad=0.1, location='bottom', orientation='horizontal')
+    plt.colorbar(cf, fraction=0.1, pad=0.08, location='bottom')  # fraction是色标图形占图片的比例,pad是色标和图片的距离
+    # plt.colorbar(cf, location='bottom', orientation='horizontal')
+    # print("这里还是好的")
+    # plt.colorbar(cf, location='bottom')
     
     draw_station()  # 将站点位置绘制到图上
     # plt.title('d01', loc='left')

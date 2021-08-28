@@ -131,9 +131,10 @@ def draw():
     fig, ax = plt.subplots(figsize=(6, 1))
     fig.subplots_adjust(bottom=0.5)
     # cmap = get_cmap_rain()
+    cmap = get_cmap_temp()
     # cmap = get_cmap_rain()
     # cmap = get_cmap_q()
-    cmap = get_cmap_landuse()
+    # cmap = get_cmap_landuse()
     # norm = mpl.colors.Normalize(vmin=5, vmax=10)
     fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap),
              cax=ax, orientation='horizontal', label='Some Units')

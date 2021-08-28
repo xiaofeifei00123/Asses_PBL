@@ -42,7 +42,7 @@ import geopandas
 # import meteva.base as mb
 from read_data import TransferData
 from read_data import GetData
-from get_cmap import get_cmap_rain2
+from get_cmap import get_cmap_rain3
 from global_variable import station_dic
 
 
@@ -50,13 +50,14 @@ from global_variable import station_dic
 ######################################
 ## 测试单个图的
 ######################################
-# area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
-# month = 'Jul'
-# time_flag = 'all'
-# gd = GetData(month)
-# rain = gd.get_rain_hourly()
-# tr = TransferData(ds=rain, area=area, time_flag=time_flag)
-# rain = tr.rain_time_total()
+area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
+month = 'Jul'
+time_flag = 'all'
+gd = GetData(month)
+rain = gd.get_rain_hourly()
+tr = TransferData(ds=rain, area=area, time_flag=time_flag)
+rain = tr.rain_time_total()
+## 结束测试
 
 
 # %%
@@ -241,7 +242,7 @@ class Draw(object):
         axes[4] = fig.add_subplot(grid[2, 0:1], projection=proj)
         axes[5] = fig.add_subplot(grid[2, 1:2], projection=proj)
 
-        cmap = get_cmap_rain2()
+        cmap = get_cmap_rain3()
 
         time_2005 = '2800_2906 Jul 2005'
         time_2014 = '1900_2000 Aug 2014'
@@ -279,12 +280,13 @@ class Draw(object):
 # levels = [10, 25,  50, 75, 100, 125, 150, 175, 200, 250, 300, 500,]
 # levels = [10, 50, 100, 150, 200, 225, 250, 275, 300,325, 350, 500]
 # levels = [10, 40, 70, 100, 130, 160, 190, 220, 250, 300, 500,]
+levels = [10, 40, 70, 100, 130, 160, 190, 220, 250, 280, 310, 500,]
 
-# # rain = rain-rain['obs']
-# fig_name = 'rain_'+month + "_"+time_flag
-# print("画  %s" %fig_name)
-# dr = Draw(fig_name, time_flag, levels=levels)
-# dr.draw_main(rain)
+# rain = rain-rain['obs']
+fig_name = 'rain_'+month + "_"+time_flag
+print("画  %s" %fig_name)
+dr = Draw(fig_name, time_flag, levels=levels)
+dr.draw_main(rain)
 ######################################
 
 

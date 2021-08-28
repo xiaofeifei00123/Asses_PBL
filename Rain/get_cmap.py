@@ -75,6 +75,12 @@ def get_cmap_rain2():
     # cmap = colors
     return cmap
 
+
+def get_cmap_rain3():
+    pass
+    cmap = cmaps.precip3_16lev
+    return cmap
+
 def get_temp():
     cccc = mpl.colors.ListedColormap([
         (2 / 250, 12 / 250,  100/250),
@@ -138,7 +144,8 @@ def draw_normal():
     pass
     fig, ax = plt.subplots(figsize=(6, 1))
     fig.subplots_adjust(bottom=0.5)
-    cmap = get_cmap_rain2()
+    # cmap = get_cmap_rain2()
+    cmap = cmaps.precip3_16lev
     norm = mpl.colors.Normalize(vmin=0, vmax=10)
     fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
              cax=ax, orientation='horizontal', label='Some Units')
