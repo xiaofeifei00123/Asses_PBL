@@ -96,13 +96,13 @@ class GetMicaps(GetData):
             [Dataset]: 各变量组成的Dataset 
         """
         var_list = list(da.coords['variable'].values)
-        pressure_levl = np.arange(800,100,-1)
+        pressure_level = np.arange(800,100,-1)
         var_list_process = []
         vards = xr.Dataset()
         for var in var_list:
             dda = da.sel(variable=var)
             dc = dda.dropna(dim='pressure')
-            ddc = dc.interp(pressure=pressure_levl, kwargs={'fill_value':'extrapolate'})
+            ddc = dc.interp(pressure=pressure_level, kwargs={'fill_value':'extrapolate'})
             vards[var] = ddc
         vards['height'] = (vards['height']-self.station['height']/10)*10
         return vards
