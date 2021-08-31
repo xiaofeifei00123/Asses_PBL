@@ -28,14 +28,16 @@ import datetime
 
 
 
+
+
 # %%
+###########################################
+### 获取数据
 area = {"lat1": 24.875, "lat2": 40.125, "lon1": 69.875, "lon2": 105.125}
 month = 'Jul'
 # month = 'May'
 gd = GetData(month)
 rain = gd.get_rain_hourly()  # 原始的小时降水数据
-
-
 
 def get_rain24h(rain):
     """[summary]
@@ -55,17 +57,12 @@ def get_rain24h(rain):
     # rain_24h = xr.concat(rain_list, pd.Index(np.arange(24), name='time'))
     rain_24h = xr.concat(rain_list, pd.Index(ttime_index, name='time'))
     return rain_24h  
-
 rain_24h = get_rain24h(rain)  # 所有格点的吧
+####################### 获取数据结束 ########################
 
 # %%
-# rain_24h['obs'][0].plot()
-# rain
-
-# %%
-
-# %%
-# rain
+#########################################################
+##### 处理数据
 def get_rain_land_area():
     land_mask = get_landmask()
     rain_land_area_list = []
@@ -73,7 +70,6 @@ def get_rain_land_area():
     land_list = ['grass', 'bare', 'bush']
 
     for i in land_list:
-        # rain_land[i] = rain_24h*land_mask[i]
         rain_land_grid = rain_24h*land_mask[i]
         rain_land_area_list.append(rain_land_grid.mean(dim=['lat','lon']))
         # rain_land_area[i] = rain_land_grid.mean(dim=['lat','lon'])
@@ -98,20 +94,6 @@ y = da.from_array(da_ac, chunks=1)
 
 # %%
 aa.sel(landuse='grass')
-# aa['ACM2']
-# cc = xr.Dataset()
-# cc['aa'] = 'aa'
-# cc
-
-
-
-# %%
-
-
-# %%
-# rain_24h
-
-# %%
 
 def get_station_mean(rain):
     """获得多个站点的平均值
@@ -165,6 +147,7 @@ def get_station_land(rain):
 
     return rain_land_dic
 
+####################### 处理数据结束 #############################
 
 
 
