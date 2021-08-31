@@ -48,15 +48,15 @@ class GetWrfout(GetData):
         if self.month == 'Jul':
             self.month_num = '07'
             self.time_first = '2016-07-01 13:00'
-            self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201607/upar_G_55228_2016070206.txt'
-            self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201607'
-            self.fnl_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201607.nc'
+            # self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201607/upar_G_55228_2016070206.txt'
+            # self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201607'
+            # self.fnl_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201607.nc'
         elif self.month == 'May':
             self.month_num = '05'
             self.time_first = '2016-05-01 13:00'
-            self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201605/upar_G_55228_2016051112.txt'
-            self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201605'
-            self.fnl_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201605.nc'
+            # self.flnm_height_obs = '/mnt/zfm_18T/fengxiang/DATA/GPS_Upar_2016/SCEX_TIPEX3_UPAR_GPS_MUL_55228-201605/upar_G_55228_2016051112.txt'
+            # self.rh_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/FNL_2016/fnl_rh_201605'
+            # self.fnl_file = '/mnt/zfm_18T/fengxiang/DATA/FNL/fnl_201605.nc'
         else:
             print("%s这个月份不在数据集内"%self.month)
             
@@ -145,11 +145,11 @@ class GetWrfout(GetData):
                 # model_dic[model] = self.get_data_single_once(var, model)
                 ds[model] = self.get_data_single_once(var, model)
 
-            elif var == 't_td':
-                t = self.get_data_single_once('temp', model)
-                td = self.get_data_single_once('td', model)
-                # model_dic[model] = t - td
-                ds[model] = t - td
+            # elif var == 't_td':
+            #     t = self.get_data_single_once('temp', model)
+            #     td = self.get_data_single_once('td', model)
+            #     # model_dic[model] = t - td
+            #     ds[model] = t - td
 
             elif var == 'wind_s':
                 U = self.get_data_single_once('U', model)

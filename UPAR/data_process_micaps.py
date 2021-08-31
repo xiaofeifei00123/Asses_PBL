@@ -18,18 +18,24 @@ import re
 import sys
 import os
 from io import StringIO
+
+from xarray.core import variable
 from global_variable import station_dic
+from multiprocessing import Pool
 
 from data_process_main import GetData
+
 
 
 # %%
 class GetMicaps(GetData):
     
-    def __init__(self, station_number):
+    def __init__(self, station):
         pass
-        self.station_number = station_number
+        self.station = station
+        self.station_number = station['number']
         self.path_micaps = '/mnt/zfm_18T/fengxiang/DATA/UPAR/Upar_2016/'
+        # self.path_micaps = '/mnt/zfm_18T/fengxiang/DATA/UPAR/TEST/'
         self.pressure_level = np.arange(570, 280, -5)
 
     def read_data_once(self, flnm):
@@ -73,8 +79,33 @@ class GetMicaps(GetData):
         df = df.where(df < 9999, np.nan)  # 将缺省值赋值为NaN
         df = df.set_index(['pressure'])  # 将pressure这一列设为index
         df.columns.name = 'variable'
+
+        ## 将第一层的离地高度设为0        
+        df.iloc[0,0] = self.station['height']/10
+        # print(df)
         da = xr.DataArray(df)
         return da
+
+    def interp_data(self, da):
+        """对这个读入的原始站点数据进行插值处理
+
+        Args:
+            da (DataArray): df直接转换成的DataArray
+
+        Returns:
+            [Dataset]: 各变量组成的Dataset 
+        """
+        var_list = list(da.coords['variable'].values)
+        pressure_levl = np.arange(800,100,-1)
+        var_list_process = []
+        vards = xr.Dataset()
+        for var in var_list:
+            dda = da.sel(variable=var)
+            dc = dda.dropna(dim='pressure')
+            ddc = dc.interp(pressure=pressure_levl, kwargs={'fill_value':'extrapolate'})
+            vards[var] = ddc
+        vards['height'] = (vards['height']-self.station['height']/10)*10
+        return vards
 
     def data_micaps(self, ):
         
@@ -92,72 +123,98 @@ class GetMicaps(GetData):
             file_name = os.path.join(self.path_micaps, flnm)
             # print(file_name)
             data_file = self.read_data_once(file_name)
+            # print(data_file)
             if not data_file:
                 # return None
                 continue
             ttt.append(tt)
+            # print(ttt)
             da = self.transpose_data_once(data_file)
-            dda = da.interp(pressure=self.pressure_level)
-            da_time.append(dda)  # 很多时次都是到595hPa才有值, 气压和高度的对应关系会随着时间发展而变化, 气压坐标和高度坐标不能通用
-        da_return = xr.concat(da_time, pd.Index(ttt, name='time'))
-        return da_return
-# %%
+            # print(da)
+            ds_interp = self.interp_data(da)
 
-ds_nc = xr.Dataset()
-station = station_dic['GaiZe']
-# for key in station_dic:
-
-    # print("读取 %s 站的数据"%key)
-station_number = station['number']
-    # print(station_number)
-gd = GetMicaps(station_number=station_number)    
-da = gd.data_micaps()
-
-# %%
-dd = da.sel(time='2016-07')
-dd.sel(variable='wind_s', pressure=570)
-
-# %%
-da = da.transpose(*(...,'pressure'))
-ds = da.to_dataset(dim='variable')
-ds_diagnostic = gd.caculate_diagnostic(ds)
-## 将原来的变量和计算的诊断变量合并为一个DataArray
-ds_return = xr.merge([ds, ds_diagnostic])
-dda = ds_return.to_array()
-## 不同站点的数据组合为一个Dataset
-# ds_nc[key] = dda
-
-# ds_nc.to_netcdf('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')
-# %%
-cc = dda.sel(time='2016-07')
-cc.sel(variable='wind_s', pressure=550)
+            da_time.append(ds_interp)  # 很多时次都是到595hPa才有值, 气压和高度的对应关系会随着时间发展而变化, 气压坐标和高度坐标不能通用
+        ds_return = xr.concat(da_time, pd.Index(ttt, name='time'))
+        return ds_return
 
 
-# %%
+############ 测试开始 ############
+# ds_nc = xr.Dataset()
+# station = station_dic['ShenZha']
+# gd = GetMicaps(station=station)    
+# ds = gd.data_micaps()
+# ds_diagnostic = gd.caculate_diagnostic(ds)
+# ds_return = xr.merge([ds, ds_diagnostic])
+# dds_return = ds_return.where(ds_return['height']>0, drop=True)
+# dds_return.isel(time=1)
+############ 测试结束 ############
 
 if __name__ == '__main__':
     pass
     # %%
-    ds_nc = xr.Dataset()
-    for key in station_dic:
+    ##### 单进程
+    # ds_nc = xr.Dataset()
+    # for key in station_dic:
 
-        print("读取 %s 站的数据"%key)
-        station_number = station_dic[key]['number']
-        # print(station_number)
-        gd = GetMicaps(station_number=station_number)    
-        da = gd.data_micaps()
+    #     print("读取 %s 站的数据"%key)
+    #     station = station_dic[key]
+    #     print(station['name'], station['number'])
+    #     # print(station_number)
+    #     gd = GetMicaps(station=station)    
+    #     ds = gd.data_micaps()
+    #     ds_diagnostic = gd.caculate_diagnostic(ds)
+    #     ## 将原来的变量和计算的诊断变量合并为一个DataArray
+    #     ds_return = xr.merge([ds, ds_diagnostic])
+    #     ds_return = ds_return.where(ds_return['height']>0, drop=True)
+    #     dda = ds_return.to_array()
+    #     ## 不同站点的数据组合为一个Dataset
+    #     ds_nc[key] = dda
+    # ds_nc.to_netcdf('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station2.nc')
 
-        da = da.transpose(*(...,'pressure'))
-        ds = da.to_dataset(dim='variable')
+
+#### 多进程
+    # ds_nc = xr.Dataset()
+
+    # %%
+    def get_one(station):
+        """读一个站点的数据
+        """
+        gd = GetMicaps(station=station)    
+        ds = gd.data_micaps()
         ds_diagnostic = gd.caculate_diagnostic(ds)
         ## 将原来的变量和计算的诊断变量合并为一个DataArray
         ds_return = xr.merge([ds, ds_diagnostic])
+        # ds_return = ds_return.where(ds_return['height']>0, drop=True)
         dda = ds_return.to_array()
-        ## 不同站点的数据组合为一个Dataset
-        ds_nc[key] = dda
+        return dda
+    
+    pool = Pool(8)
+    result = []
+    for key in station_dic:
+        print("读取 %s 站的数据"%key)
+        station = station_dic[key]
+        tr = pool.apply_async(get_one, args=(station,))
+        result.append(tr)
+    pool.close()
+    pool.join()
 
-    ds_nc.to_netcdf('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station.nc')
+    ds_nc = xr.Dataset()
+    num = len(station_dic)
+    
+    for i,j in zip(result,station_dic):
+        ds_nc[j] = i.get()
+    print(ds_nc)
+        
+    # %%
+    # ds_nc['LinZhi'].sel(variable='height').isel(time=0)
+    # ds_return = ds_return.where(ds_return['height']>0, drop=True)
+    dds = ds_nc.where(ds_nc.sel(variable='height')>0, drop=True)
 
-    #-------------------------------
-    ## 测试
-    #-------------------------------
+    dds.to_netcdf('/mnt/zfm_18T/fengxiang/DATA/UPAR/upar_2016_all_station2.nc')
+
+
+
+
+
+
+# %%
